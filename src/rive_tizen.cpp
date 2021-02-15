@@ -1,5 +1,12 @@
 #include "rive_tizen.hpp"
 #include "math/aabb.hpp"
+#include "renderer.hpp"
+
+namespace rive
+{
+   RenderPaint *makeRenderPaint() { return nullptr;}
+   RenderPath *makeRenderPath() { return nullptr;}
+}
 
 void rive_tizen_print()
 {
