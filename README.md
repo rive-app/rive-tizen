@@ -1,5 +1,9 @@
 # Rive-Tizen
-## Build Rive-Tizen
+## Build
+### Prerequiste
+Rive-Tizen requires [ThorVG](https://github.com/Samsung/thorvg) to render Rive graphical units.
+Please visit [ThorVG](https://github.com/Samsung/thorvg) and install that library by its guidance.
+
 ### Prepare Sub Modules
 Rive-Tizen extends [rive-cpp](https://github.com/rive-app/rive-cpp)  project for exchanging backend rendering engine to Tizen specific.
 Thus, you can immediately clone the rive-cpp project and build it on Rive-Tizen repo.
