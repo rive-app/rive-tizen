@@ -4,7 +4,7 @@ project('rive_tizen',
         version : '0.1.0',
         license : 'MIT')
 
-#thorvg_dep = dependency('thorvg', required : true)
+thorvg_dep = dependency('thorvg', required : true)
 
 run_command('script/install.sh')
 
@@ -89,9 +89,16 @@ rive_src = [
    'submodule/src/transform_component.cpp',
 ]
 
+thorvg_renderer_dep = declare_dependency(
+   include_directories : include_directories(['src/renderer/include']),
+   sources : ['src/renderer/src/thorvg_renderer.cpp'],
+   dependencies : thorvg_dep
+)
+
 rive_dep = declare_dependency(
    include_directories : include_directories(['submodule/include']),
-   sources : rive_src
+   sources : rive_src,
+   dependencies : thorvg_renderer_dep
 )
 
 rive_tizen_lib = library(
