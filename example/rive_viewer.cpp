@@ -1,7 +1,7 @@
 #include <thread>
-#include <Evas_GL.h>
 #include <Elementary.h>
 #include <rive_tizen.hpp>
+
 #include "animation/linear_animation_instance.hpp"
 #include "artboard.hpp"
 #include "file.hpp"
@@ -9,34 +9,32 @@
 
 using namespace std;
 
-
 #define WIDTH 700
 #define HEIGHT 700
 
-static uint32_t buffer[WIDTH * HEIGHT];
-static unique_ptr<tvg::SwCanvas> swCanvas;
-Eo *gView;
-rive::File* currentFile = nullptr;
-rive::Artboard* artboard = nullptr;
-rive::LinearAnimationInstance* animationInstance = nullptr;
+static unique_ptr<tvg::SwCanvas> canvas;
+static rive::File* currentFile = nullptr;
+static rive::Artboard* artboard = nullptr;
+static rive::LinearAnimationInstance* animationInstance = nullptr;
 
-void win_del(void *data, Evas_Object *o, void *ev)
+static void deleteWindow(void *data, Evas_Object *obj, void *ev)
 {
    elm_exit();
 }
 
-void drawSwView(void* data, Eo* obj)
+static void drawToCanvas(void* data, Eo* obj)
 {
-    if (swCanvas && swCanvas->draw() == tvg::Result::Success) {
-        swCanvas->sync();
+    if (canvas->draw() == tvg::Result::Success)
+    {
+        canvas->sync();
     }
 }
 
-void tvgSwTest(uint32_t* buffer)
+static void runExample(uint32_t* buffer)
 {
     //Create a Canvas
-    swCanvas = tvg::SwCanvas::gen();
-    swCanvas->target(buffer, WIDTH, WIDTH, HEIGHT, tvg::SwCanvas::ARGB8888);
+    canvas = tvg::SwCanvas::gen();
+    canvas->target(buffer, WIDTH, WIDTH, HEIGHT, tvg::SwCanvas::ARGB8888);
 
     // Load Rive File
     char *filename = "../../example/shapes.riv";
@@ -45,6 +43,7 @@ void tvgSwTest(uint32_t* buffer)
     fseek(fp, 0, SEEK_END);
     auto length = ftell(fp);
     fseek(fp, 0, SEEK_SET);
+
     uint8_t* bytes = new uint8_t[length];
     if (fread(bytes, 1, length, fp) != length)
     {
@@ -52,6 +51,7 @@ void tvgSwTest(uint32_t* buffer)
        fprintf(stderr, "failed to read all of %s\n", filename);
        return;
     }
+
     auto reader = rive::BinaryReader(bytes, length);
     rive::File* file = nullptr;
     auto result = rive::File::import(reader, &file);
@@ -63,46 +63,47 @@ void tvgSwTest(uint32_t* buffer)
     }
 
     artboard = file->artboard();
-    artboard->advance(0.0f);
 
     delete animationInstance;
-    delete currentFile;
 
     auto animation = artboard->firstAnimation<rive::LinearAnimation>();
     if (animation != nullptr)
     {
        animationInstance = new rive::LinearAnimationInstance(animation);
+       animationInstance->advance(0);
     }
     else
     {
        animationInstance = nullptr;
     }
 
-    currentFile = file;
-    delete[] bytes;
+    rive::ThorvgRenderer renderer(canvas.get());
 
-    if (animationInstance != nullptr)
-    {
-       animationInstance->advance(0);
-       animationInstance->apply(artboard);
-    }
-    artboard->advance(0);
-
-    rive::ThorvgRenderer renderer(swCanvas.get());
     renderer.save();
+    artboard->advance(0);
     artboard->draw(&renderer);
     renderer.restore();
+
+    delete[] bytes;
+    delete file;
 }
 
-static Eo* createSwView()
+
+static void cleanExample()
+{
+    delete animationInstance;
+}
+
+
+static void setupScreen(uint32_t* buffer)
 {
     Eo* win = elm_win_util_standard_add(NULL, "Rive Viewer");
-    evas_object_smart_callback_add(win, "delete,request", win_del, 0);
+    evas_object_smart_callback_add(win, "delete,request", deleteWindow, 0);
 
     Eo* view = evas_object_image_filled_add(evas_object_evas_get(win));
     evas_object_image_size_set(view, WIDTH, HEIGHT);
     evas_object_image_data_set(view, buffer);
-    evas_object_image_pixels_get_callback_set(view, drawSwView, nullptr);
+    evas_object_image_pixels_get_callback_set(view, drawToCanvas, nullptr);
     evas_object_image_pixels_dirty_set(view, EINA_TRUE);
     evas_object_image_data_update_add(view, 0, 0, WIDTH, HEIGHT);
     evas_object_size_hint_weight_set(view, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
@@ -111,37 +112,27 @@ static Eo* createSwView()
     elm_win_resize_object_add(win, view);
     evas_object_resize(win, WIDTH, HEIGHT);
     evas_object_show(win);
-
-    tvgSwTest(buffer);
-
-    return view;
 }
 
 int main(int argc, char **argv)
 {
-    rive_tizen_print();
-    rive::ThorvgRenderPath *path = new rive::ThorvgRenderPath();
+    static uint32_t buffer[WIDTH * HEIGHT];
 
-    tvg::CanvasEngine tvgEngine = tvg::CanvasEngine::Sw;
+    tvg::Initializer::init(tvg::CanvasEngine::Sw, thread::hardware_concurrency());
 
-    auto threads = std::thread::hardware_concurrency();
+    elm_init(argc, argv);
 
-    if (tvg::Initializer::init(tvgEngine, threads) == tvg::Result::Success)
-    {
-        elm_init(argc, argv);
+    setupScreen(buffer);
 
-        gView = createSwView();
+    runExample(buffer);
 
-        elm_run();
-        elm_shutdown();
+    elm_run();
 
-        tvg::Initializer::term(tvgEngine);
+    cleanExample();
 
-    }
-    else
-    {
-        cout << "engine is not supported" << endl;
-    }
+    elm_shutdown();
+
+    tvg::Initializer::term(tvg::CanvasEngine::Sw);
 
     return 0;
 }
