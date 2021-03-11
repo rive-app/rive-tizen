@@ -23,9 +23,13 @@ namespace rive
 
    struct ThorvgPaint
    {
-      int r, g, b, a;
+      int fillColor[4];
+      int strokeColor[4];
       float thickness;
-      ThorvgPaint() : r(0), g(0), b(0), a(0), thickness(0.0) {}
+      RenderPaintStyle style;
+      bool isFill;
+      bool isStroke;
+      ThorvgPaint() : isFill(false), isStroke(false) {}
    };
 
    class ThorvgRenderPath : public RenderPath
@@ -34,11 +38,13 @@ namespace rive
       tvg::Shape *m_Path;
       std::vector<ThorvgPathType> m_PathType;
       std::vector<ThorvgPoint> m_PathPoints;
-      bool pushed;
+      bool m_Pushed;
 
    public:
       ThorvgRenderPath();
       tvg::Shape* path() { return m_Path; }
+      bool getPushed() { return m_Pushed; }
+      bool setPushed(bool pushed) { m_Pushed = pushed; }
       void reset() override;
       void addRenderPath(RenderPath* path, const Mat2D& transform) override;
       void fillRule(FillRule value) override;
