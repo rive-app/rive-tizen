@@ -12,14 +12,11 @@ namespace rive
 {
    struct TvgPaint
    {
-      int fillColor[4];
-      int strokeColor[4];
+      uint8_t color[4];
       float thickness;
       tvg::StrokeJoin join = tvg::StrokeJoin::Bevel;
       tvg::StrokeCap  cap = tvg::StrokeCap::Butt;
       RenderPaintStyle style;
-      bool isFill = false;
-      bool isStroke = false;
    };
 
    class TvgRenderPath : public RenderPath
@@ -28,13 +25,14 @@ namespace rive
       Shape *m_Shape;
       vector<PathCommand> m_PathType;
       vector<Vec2D> m_PathPoints;
-      bool m_Pushed = false;
+      bool active = false;
 
    public:
       TvgRenderPath();
+      ~TvgRenderPath();
       Shape* shape() { return m_Shape; }
-      bool getPushed() { return m_Pushed; }
-      void setPushed(bool pushed) { m_Pushed = pushed; }
+      bool onCanvas() { return active; }
+      void onCanvas(bool active) { this->active = active; }
       void reset() override;
       void addRenderPath(RenderPath* path, const Mat2D& transform) override;
       void fillRule(FillRule value) override;

@@ -9,6 +9,11 @@ TvgRenderPath::TvgRenderPath()
 	this->m_Shape = tvg::Shape::gen().release();
 }
 
+TvgRenderPath::~TvgRenderPath()
+{
+   if (!active) delete(m_Shape);
+}
+
 void TvgRenderPath::fillRule(FillRule value)
 {
 	switch (value)
@@ -17,13 +22,14 @@ void TvgRenderPath::fillRule(FillRule value)
 			m_Shape->fill(tvg::FillRule::EvenOdd);
 			break;
 		case FillRule::nonZero:
+         m_Shape->fill(tvg::FillRule::Winding);
 			break;
 	}
 }
 
-Vec2D applyTransform(const Vec2D &vec, const Mat2D &mat)
+Point applyTransform(const Vec2D &vec, const Mat2D &mat)
 {
-	tvg::Matrix m = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+	Matrix m = {1, 0, 0, 0, 1, 0, 0, 0, 1};
 	m.e11 = mat[0];
 	m.e12 = mat[2];
 	m.e13 = mat[4];
@@ -31,47 +37,51 @@ Vec2D applyTransform(const Vec2D &vec, const Mat2D &mat)
 	m.e22 = mat[3];
 	m.e23 = mat[5];
 
-	Vec2D ret;
-	ret[0] = round(vec[0] * m.e11 + vec[1] * m.e12 + m.e13);
-	ret[1] = round(vec[0] * m.e21 + vec[1] * m.e22 + m.e23);
-
-	return ret;
+	return {vec[0] * m.e11 + vec[1] * m.e12 + m.e13, vec[0] * m.e21 + vec[1] * m.e22 + m.e23};
 }
 
 void TvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
 {
    auto m_PathType = reinterpret_cast<TvgRenderPath*>(path)->m_PathType;
    auto m_PathPoints = reinterpret_cast<TvgRenderPath*>(path)->m_PathPoints;
-   Vec2D vecOut1, vecOut2, vecOut3;
-
    int index = 0;
+
+   /* OPTIMIZE ME: Should avoid data copy in loop... */
+
    for (size_t i = 0; i < m_PathType.size(); i++)
    {
-      PathCommand type = m_PathType[i];
-      switch(type)
+      /* OPTIMIZE ME: apply transform only when it's not identity */
+      switch(m_PathType[i])
       {
          case PathCommand::MoveTo:
-            vecOut1 = applyTransform(m_PathPoints[index], transform);
-            m_Shape->moveTo(vecOut1[0], vecOut1[1]);
+         {
+            auto pt = applyTransform(m_PathPoints[index], transform);
+            m_Shape->moveTo(pt.x, pt.y);
             index += 1;
             break;
+         }
          case PathCommand::LineTo:
-            vecOut1 = applyTransform(m_PathPoints[index], transform);
-            m_Shape->lineTo(vecOut1[0], vecOut1[1]);
+         {
+            auto pt = applyTransform(m_PathPoints[index], transform);
+            m_Shape->lineTo(pt.x, pt.y);
             index += 1;
             break;
+         }
          case PathCommand::CubicTo:
-            vecOut1 = applyTransform(m_PathPoints[index], transform);
-            vecOut2 = applyTransform(m_PathPoints[index + 1], transform);
-            vecOut3 = applyTransform(m_PathPoints[index + 2], transform);
-            m_Shape->cubicTo(vecOut1[0], vecOut1[1],
-                             vecOut2[0], vecOut2[1],
-                             vecOut3[0], vecOut3[1]);
+         {
+            auto pt1 = applyTransform(m_PathPoints[index], transform);
+            auto pt2 = applyTransform(m_PathPoints[index + 1], transform);
+            auto pt3 = applyTransform(m_PathPoints[index + 2], transform);
+            m_Shape->cubicTo(pt1.x, pt1.y, pt2.x, pt2.y, pt3.x, pt3.y);
             index += 3;
             break;
+         }
          case PathCommand::Close:
+         {
             m_Shape->close();
+            index += 1;
             break;
+         }
       }
    }
 }
@@ -123,38 +133,35 @@ void TvgRenderer::transform(const Mat2D& transform)
 
 void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
 {
-	Matrix m = {m_Transform[0], 0, m_Transform[4], 0, m_Transform[3], m_Transform[5], 0, 0, 1};
+   auto renderPath = static_cast<TvgRenderPath*>(path);
+   auto shape = static_cast<TvgRenderPath*>(path)->shape();
+   auto tvgPaint = static_cast<TvgRenderPaint*>(paint)->paint();
 
-   auto renderPath = reinterpret_cast<TvgRenderPath*>(path);
-   auto shape = reinterpret_cast<TvgRenderPath*>(path)->shape();
-   shape->transform(m);
+   /* OPTIMIZE ME: Stroke / Fill Paints required to draw separately.
+      thorvg doesn't need to handle both, we can avoid one of them rendering... */
 
-   auto tvgPaint = reinterpret_cast<TvgRenderPaint*>(paint)->paint();
-
-   if (tvgPaint->isFill)
+   if (tvgPaint->style == RenderPaintStyle::fill)
    {
-      shape->fill(tvgPaint->fillColor[0], tvgPaint->fillColor[1], tvgPaint->fillColor[2], tvgPaint->fillColor[3]);
+      shape->fill(tvgPaint->color[0], tvgPaint->color[1], tvgPaint->color[2], tvgPaint->color[3]);
    }
-
-   if (tvgPaint->isStroke)
+   else if (tvgPaint->style == RenderPaintStyle::stroke)
    {
-      shape->stroke(tvgPaint->strokeColor[0], tvgPaint->strokeColor[1], tvgPaint->strokeColor[2], tvgPaint->strokeColor[3]);
+      shape->stroke(tvgPaint->color[0], tvgPaint->color[1], tvgPaint->color[2], tvgPaint->color[3]);
       shape->stroke(tvgPaint->cap);
       shape->stroke(tvgPaint->join);
-      if (tvgPaint->thickness != 0)
-      {
-         shape->stroke(tvgPaint->thickness);
-      }
+      shape->stroke(tvgPaint->thickness);
    }
 
-   if (!renderPath->getPushed())
+   shape->transform({m_Transform[0], 0, m_Transform[4], 0, m_Transform[3], m_Transform[5], 0, 0, 1});
+
+   if (renderPath->onCanvas())
    {
-      m_Canvas->push(unique_ptr<Shape>(shape));
-      renderPath->setPushed(true);
+      m_Canvas->update(shape);
    }
    else
    {
-      m_Canvas->update(shape);
+      m_Canvas->push(unique_ptr<Shape>(shape));
+      renderPath->onCanvas(true);
    }
 }
 
@@ -170,39 +177,15 @@ TvgRenderPaint::TvgRenderPaint()
 
 void TvgRenderPaint::style(RenderPaintStyle style)
 {
-	switch (style)
-	{
-		case RenderPaintStyle::fill:
-         m_Paint.style = RenderPaintStyle::fill;
-         m_Paint.isFill = true;
-			break;
-		case RenderPaintStyle::stroke:
-         m_Paint.style = RenderPaintStyle::stroke;
-         m_Paint.isStroke = true;
-			break;
-	}
+   m_Paint.style = style;
 }
+
 void TvgRenderPaint::color(unsigned int value)
 {
-   int b = value >> 0 & 255;
-   int g = value >> 8 & 255;
-   int r = value >> 16 & 255;
-   int a = value >> 24 & 255;
-
-   if (m_Paint.style == RenderPaintStyle::fill)
-   {
-      m_Paint.fillColor[0] = r;
-      m_Paint.fillColor[1] = g;
-      m_Paint.fillColor[2] = b;
-      m_Paint.fillColor[3] = a;
-   }
-   else if (m_Paint.style == RenderPaintStyle::stroke)
-   {
-      m_Paint.strokeColor[0] = r;
-      m_Paint.strokeColor[1] = g;
-      m_Paint.strokeColor[2] = b;
-      m_Paint.strokeColor[3] = a;
-   }
+   m_Paint.color[0] = value >> 16 & 255;
+   m_Paint.color[1] = value >> 8 & 255;
+   m_Paint.color[2] = value >> 0 & 255;
+   m_Paint.color[3] = value >> 24 & 255;
 }
 
 void TvgRenderPaint::thickness(float value)
