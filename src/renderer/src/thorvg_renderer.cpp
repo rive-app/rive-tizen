@@ -6,7 +6,7 @@ using namespace rive;
 
 TvgRenderPath::TvgRenderPath()
 {
-	this->m_Path = tvg::Shape::gen().release();
+	this->m_Shape = tvg::Shape::gen().release();
 }
 
 void TvgRenderPath::fillRule(FillRule value)
@@ -14,7 +14,7 @@ void TvgRenderPath::fillRule(FillRule value)
 	switch (value)
 	{
 		case FillRule::evenOdd:
-			m_Path->fill(tvg::FillRule::EvenOdd);
+			m_Shape->fill(tvg::FillRule::EvenOdd);
 			break;
 		case FillRule::nonZero:
 			break;
@@ -27,27 +27,27 @@ void TvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
    auto m_PathPoints = reinterpret_cast<TvgRenderPath*>(path)->m_PathPoints;
 
    int index = 0;
-   for (int i = 0; i < m_PathType.size(); i++)
+   for (size_t i = 0; i < m_PathType.size(); i++)
    {
       PathCommand type = m_PathType[i];
       switch(type)
       {
          case PathCommand::MoveTo:
-            m_Path->moveTo(m_PathPoints[index].x, m_PathPoints[index].y);
+            m_Shape->moveTo(m_PathPoints[index].x, m_PathPoints[index].y);
             index += 1;
             break;
          case PathCommand::LineTo:
-            m_Path->lineTo(m_PathPoints[index].x, m_PathPoints[index].y);
+            m_Shape->lineTo(m_PathPoints[index].x, m_PathPoints[index].y);
             index += 1;
             break;
          case PathCommand::CubicTo:
-            m_Path->cubicTo(m_PathPoints[index].x, m_PathPoints[index].y,
-                            m_PathPoints[index+1].x, m_PathPoints[index+1].y,
-                            m_PathPoints[index+2].x, m_PathPoints[index+2].y);
+            m_Shape->cubicTo(m_PathPoints[index].x, m_PathPoints[index].y,
+                             m_PathPoints[index+1].x, m_PathPoints[index+1].y,
+                             m_PathPoints[index+2].x, m_PathPoints[index+2].y);
             index += 3;
             break;
          case PathCommand::Close:
-            m_Path->close();
+            m_Shape->close();
             break;
       }
    }
@@ -99,34 +99,38 @@ void TvgRenderer::transform(const Mat2D& transform)
 
 void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
 {
-	Matrix m = {m_Transform[0], 0, m_Transform[4],
-                    0, m_Transform[3], m_Transform[5],
-                    0, 0, 1};
+	Matrix m = {m_Transform[0], 0, m_Transform[4], 0, m_Transform[3], m_Transform[5], 0, 0, 1};
 
-   TvgRenderPath *renderPath = reinterpret_cast<TvgRenderPath*>(path);
-   Shape *drawPath = reinterpret_cast<TvgRenderPath*>(path)->path();
-   drawPath->transform(m);
+   auto renderPath = reinterpret_cast<TvgRenderPath*>(path);
+   auto shape = reinterpret_cast<TvgRenderPath*>(path)->shape();
+   shape->transform(m);
 
-   TvgPaint *drawPaint = reinterpret_cast<TvgRenderPaint*>(paint)->paint();
-   if (drawPaint->isFill)
-     drawPath->fill(drawPaint->fillColor[0], drawPaint->fillColor[1], drawPaint->fillColor[2], drawPaint->fillColor[3]);
-   if (drawPaint->isStroke)
+   auto tvgPaint = reinterpret_cast<TvgRenderPaint*>(paint)->paint();
+
+   if (tvgPaint->isFill)
    {
-     drawPath->stroke(drawPaint->strokeColor[0], drawPaint->strokeColor[1], drawPaint->strokeColor[2], drawPaint->strokeColor[3]);
-     drawPath->stroke(drawPaint->cap);
-     drawPath->stroke(drawPaint->join);
-     if (drawPaint->thickness != 0)
-       drawPath->stroke(drawPaint->thickness);
+      shape->fill(tvgPaint->fillColor[0], tvgPaint->fillColor[1], tvgPaint->fillColor[2], tvgPaint->fillColor[3]);
+   }
+
+   if (tvgPaint->isStroke)
+   {
+      shape->stroke(tvgPaint->strokeColor[0], tvgPaint->strokeColor[1], tvgPaint->strokeColor[2], tvgPaint->strokeColor[3]);
+      shape->stroke(tvgPaint->cap);
+      shape->stroke(tvgPaint->join);
+      if (tvgPaint->thickness != 0)
+      {
+         shape->stroke(tvgPaint->thickness);
+      }
    }
 
    if (!renderPath->getPushed())
    {
-      Result ret = m_Canvas->push(unique_ptr<Shape>(drawPath));
+      m_Canvas->push(unique_ptr<Shape>(shape));
       renderPath->setPushed(true);
    }
    else
    {
-      Result ret = m_Canvas->update(drawPath);
+      m_Canvas->update(shape);
    }
 }
 

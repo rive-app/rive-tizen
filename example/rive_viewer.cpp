@@ -13,7 +13,6 @@ using namespace std;
 #define HEIGHT 700
 
 static unique_ptr<tvg::SwCanvas> canvas;
-static rive::File* currentFile = nullptr;
 static rive::Artboard* artboard = nullptr;
 static rive::LinearAnimationInstance* animationInstance = nullptr;
 
@@ -37,11 +36,11 @@ static void runExample(uint32_t* buffer)
     canvas->target(buffer, WIDTH, WIDTH, HEIGHT, tvg::SwCanvas::ARGB8888);
 
     // Load Rive File
-    char *filename = "../../example/shapes.riv";
+    const char* filename = "../../example/shapes.riv";
     FILE* fp = fopen(filename, "r");
 
     fseek(fp, 0, SEEK_END);
-    auto length = ftell(fp);
+    size_t length = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
     uint8_t* bytes = new uint8_t[length];
