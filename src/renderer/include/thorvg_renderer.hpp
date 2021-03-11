@@ -21,6 +21,8 @@ namespace rive
       int fillColor[4];
       int strokeColor[4];
       float thickness;
+      tvg::StrokeJoin join;
+      tvg::StrokeCap  cap;
       RenderPaintStyle style;
       bool isFill;
       bool isStroke;
