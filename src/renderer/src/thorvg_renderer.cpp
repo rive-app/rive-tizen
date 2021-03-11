@@ -4,7 +4,7 @@
 
 using namespace rive;
 
-ThorvgRenderPath::ThorvgRenderPath() : pushed(false)
+ThorvgRenderPath::ThorvgRenderPath() : m_Pushed(false)
 {
 	this->m_Path = tvg::Shape::gen().release();
 }
@@ -103,14 +103,29 @@ void ThorvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
                     0, m_Transform[3], m_Transform[5],
                     0, 0, 1};
 
+   ThorvgRenderPath *renderPath = reinterpret_cast<ThorvgRenderPath*>(path);
    tvg::Shape *drawPath = reinterpret_cast<ThorvgRenderPath*>(path)->path();
-	drawPath->transform(m);
+   drawPath->transform(m);
 
    ThorvgPaint *drawPaint = reinterpret_cast<ThorvgRenderPaint*>(paint)->paint();
-   drawPath->fill(drawPaint->r, drawPaint->g, drawPaint->b, drawPaint->a);
-   drawPath->stroke(drawPaint->thickness);
+   if (drawPaint->isFill)
+     drawPath->fill(drawPaint->fillColor[0], drawPaint->fillColor[1], drawPaint->fillColor[2], drawPaint->fillColor[3]);
+   if (drawPaint->isStroke)
+   {
+     drawPath->stroke(drawPaint->strokeColor[0], drawPaint->strokeColor[1], drawPaint->strokeColor[2], drawPaint->strokeColor[3]);
+     if (drawPaint->thickness != 0)
+       drawPath->stroke(drawPaint->thickness);
+   }
 
-   m_Canvas->push(std::unique_ptr<tvg::Shape>(drawPath));
+   if (!renderPath->getPushed())
+   {
+      tvg::Result ret = m_Canvas->push(std::unique_ptr<tvg::Shape>(drawPath));
+      renderPath->setPushed(true);
+   }
+   else
+   {
+      tvg::Result ret = m_Canvas->update(drawPath);
+   }
 }
 
 void ThorvgRenderer::clipPath(RenderPath* path)
@@ -128,17 +143,36 @@ void ThorvgRenderPaint::style(RenderPaintStyle style)
 	switch (style)
 	{
 		case RenderPaintStyle::fill:
+         m_Paint.style = RenderPaintStyle::fill;
+         m_Paint.isFill = true;
 			break;
 		case RenderPaintStyle::stroke:
+         m_Paint.style = RenderPaintStyle::stroke;
+         m_Paint.isStroke = true;
 			break;
 	}
 }
 void ThorvgRenderPaint::color(unsigned int value)
 {
-   m_Paint.r = value >> 0 & 255;
-   m_Paint.g = value >> 8 & 255;
-   m_Paint.b = value >> 16 & 255;
-   m_Paint.a = value >> 24 & 255;
+   int b = value >> 0 & 255;
+   int g = value >> 8 & 255;
+   int r = value >> 16 & 255;
+   int a = value >> 24 & 255;
+
+   if (m_Paint.style == RenderPaintStyle::fill)
+   {
+      m_Paint.fillColor[0] = r;
+      m_Paint.fillColor[1] = g;
+      m_Paint.fillColor[2] = b;
+      m_Paint.fillColor[3] = a;
+   }
+   else if (m_Paint.style == RenderPaintStyle::stroke)
+   {
+      m_Paint.strokeColor[0] = r;
+      m_Paint.strokeColor[1] = g;
+      m_Paint.strokeColor[2] = b;
+      m_Paint.strokeColor[3] = a;
+   }
 }
 
 void ThorvgRenderPaint::thickness(float value)
