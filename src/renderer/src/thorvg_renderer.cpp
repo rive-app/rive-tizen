@@ -37,7 +37,7 @@ void ThorvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
             index += 1;
             break;
          case ThorvgPathType::LineTo:
-            m_Path->moveTo(m_PathPoints[index].x, m_PathPoints[index].y);
+            m_Path->lineTo(m_PathPoints[index].x, m_PathPoints[index].y);
             index += 1;
             break;
          case ThorvgPathType::CubicTo:
