@@ -10,7 +10,7 @@ using namespace std;
 
 namespace rive
 {
-   struct Point
+   struct TvgPoint
    {
       float x, y;
    };
@@ -32,7 +32,7 @@ namespace rive
    private:
       Shape *m_Path;
       vector<PathCommand> m_PathType;
-      vector<Point> m_PathPoints;
+      vector<TvgPoint> m_PathPoints;
       bool m_Pushed = false;
 
    public:
