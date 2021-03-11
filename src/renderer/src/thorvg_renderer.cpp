@@ -42,8 +42,8 @@ Point applyTransform(const Vec2D &vec, const Mat2D &mat)
 
 void TvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
 {
-   auto m_PathType = reinterpret_cast<TvgRenderPath*>(path)->m_PathType;
-   auto m_PathPoints = reinterpret_cast<TvgRenderPath*>(path)->m_PathPoints;
+   auto m_PathType = static_cast<TvgRenderPath*>(path)->m_PathType;
+   auto m_PathPoints = static_cast<TvgRenderPath*>(path)->m_PathPoints;
    int index = 0;
 
    /* OPTIMIZE ME: Should avoid data copy in loop... */
