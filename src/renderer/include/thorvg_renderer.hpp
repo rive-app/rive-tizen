@@ -10,10 +10,9 @@ using namespace std;
 
 namespace rive
 {
-   struct TvgPoint
+   struct Point
    {
       float x, y;
-      TvgPoint(int _x, int _y) : x(_x), y(_y) { }
    };
 
    struct TvgPaint
@@ -24,9 +23,8 @@ namespace rive
       tvg::StrokeJoin join;
       tvg::StrokeCap  cap;
       RenderPaintStyle style;
-      bool isFill;
-      bool isStroke;
-      TvgPaint() : isFill(false), isStroke(false) {}
+      bool isFill = false;
+      bool isStroke = false;
    };
 
    class TvgRenderPath : public RenderPath
@@ -34,8 +32,8 @@ namespace rive
    private:
       Shape *m_Path;
       vector<PathCommand> m_PathType;
-      vector<TvgPoint> m_PathPoints;
-      bool m_Pushed;
+      vector<Point> m_PathPoints;
+      bool m_Pushed = false;
 
    public:
       TvgRenderPath();

@@ -4,7 +4,7 @@
 
 using namespace rive;
 
-TvgRenderPath::TvgRenderPath() : m_Pushed(false)
+TvgRenderPath::TvgRenderPath()
 {
 	this->m_Path = tvg::Shape::gen().release();
 }
@@ -62,21 +62,21 @@ void TvgRenderPath::reset()
 void TvgRenderPath::moveTo(float x, float y)
 {
    m_PathType.push_back(PathCommand::MoveTo);
-   m_PathPoints.push_back(TvgPoint(x, y));
+   m_PathPoints.push_back({x, y});
 }
 
 void TvgRenderPath::lineTo(float x, float y)
 {
    m_PathType.push_back(PathCommand::LineTo);
-   m_PathPoints.push_back(TvgPoint(x, y));
+   m_PathPoints.push_back({x, y});
 }
 
 void TvgRenderPath::cubicTo(float ox, float oy, float ix, float iy, float x, float y)
 {
    m_PathType.push_back(PathCommand::CubicTo);
-   m_PathPoints.push_back(TvgPoint(ox, oy));
-   m_PathPoints.push_back(TvgPoint(ix, iy));
-   m_PathPoints.push_back(TvgPoint(x, y));
+   m_PathPoints.push_back({ox, oy});
+   m_PathPoints.push_back({ix, iy});
+   m_PathPoints.push_back({x, y});
 }
 
 void TvgRenderPath::close()
