@@ -21,10 +21,28 @@ void TvgRenderPath::fillRule(FillRule value)
 	}
 }
 
+Vec2D applyTransform(const Vec2D &vec, const Mat2D &mat)
+{
+	tvg::Matrix m = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+	m.e11 = mat[0];
+	m.e12 = mat[2];
+	m.e13 = mat[4];
+	m.e21 = mat[1];
+	m.e22 = mat[3];
+	m.e23 = mat[5];
+
+	Vec2D ret;
+	ret[0] = round(vec[0] * m.e11 + vec[1] * m.e12 + m.e13);
+	ret[1] = round(vec[0] * m.e21 + vec[1] * m.e22 + m.e23);
+
+	return ret;
+}
+
 void TvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
 {
    auto m_PathType = reinterpret_cast<TvgRenderPath*>(path)->m_PathType;
    auto m_PathPoints = reinterpret_cast<TvgRenderPath*>(path)->m_PathPoints;
+   Vec2D vec1, vec2, vec3, vecOut1, vecOut2, vecOut3;
 
    int index = 0;
    for (size_t i = 0; i < m_PathType.size(); i++)
@@ -33,17 +51,22 @@ void TvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
       switch(type)
       {
          case PathCommand::MoveTo:
-            m_Shape->moveTo(m_PathPoints[index].x, m_PathPoints[index].y);
+            vecOut1 = applyTransform(m_PathPoints[index], transform);
+            m_Shape->moveTo(vecOut1[0], vecOut1[1]);
             index += 1;
             break;
          case PathCommand::LineTo:
-            m_Shape->lineTo(m_PathPoints[index].x, m_PathPoints[index].y);
+            vecOut1 = applyTransform(m_PathPoints[index], transform);
+            m_Shape->lineTo(vecOut1[0], vecOut1[1]);
             index += 1;
             break;
          case PathCommand::CubicTo:
-            m_Shape->cubicTo(m_PathPoints[index].x, m_PathPoints[index].y,
-                             m_PathPoints[index+1].x, m_PathPoints[index+1].y,
-                             m_PathPoints[index+2].x, m_PathPoints[index+2].y);
+            vecOut1 = applyTransform(m_PathPoints[index], transform);
+            vecOut2 = applyTransform(m_PathPoints[index + 1], transform);
+            vecOut3 = applyTransform(m_PathPoints[index + 2], transform);
+            m_Shape->cubicTo(vecOut1[0], vecOut1[1],
+                             vecOut2[0], vecOut2[1],
+                             vecOut3[0], vecOut3[1]);
             index += 3;
             break;
          case PathCommand::Close:
@@ -55,6 +78,7 @@ void TvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
 
 void TvgRenderPath::reset()
 {
+   m_Shape->reset();
    m_PathType.clear();
    m_PathPoints.clear();
 }

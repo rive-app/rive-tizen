@@ -13,8 +13,13 @@ using namespace std;
 #define HEIGHT 700
 
 static unique_ptr<tvg::SwCanvas> canvas;
+static tvg::Canvas *renderCanvas;
+static rive::File* file = nullptr;
 static rive::Artboard* artboard = nullptr;
 static rive::LinearAnimationInstance* animationInstance = nullptr;
+static Ecore_Animator *animator = nullptr;
+static Eo* view = nullptr;
+static double lastTime;
 
 static void deleteWindow(void *data, Evas_Object *obj, void *ev)
 {
@@ -29,11 +34,40 @@ static void drawToCanvas(void* data, Eo* obj)
     }
 }
 
+Eina_Bool animationLoop(void *data)
+{
+    double currentTime = ecore_time_get();
+    float elapsed = currentTime - lastTime;
+    static float animationTime = 0;
+    lastTime = currentTime;
+
+    if (artboard != nullptr)
+    {
+       if (animationInstance != nullptr)
+       {
+          animationInstance->advance(elapsed);
+          animationInstance->apply(artboard);
+       }
+       artboard->advance(elapsed);
+
+       rive::TvgRenderer renderer(renderCanvas);
+       renderer.save();
+       artboard->draw(&renderer);
+       renderer.restore();
+    }
+
+    evas_object_image_pixels_dirty_set(view, EINA_TRUE);
+    evas_object_image_data_update_add(view, 0, 0, WIDTH, HEIGHT);
+
+    return ECORE_CALLBACK_RENEW;
+}
+
 static void runExample(uint32_t* buffer)
 {
     //Create a Canvas
     canvas = tvg::SwCanvas::gen();
     canvas->target(buffer, WIDTH, WIDTH, HEIGHT, tvg::SwCanvas::ARGB8888);
+    renderCanvas = canvas.get();
 
     // Load Rive File
     const char* filename = "../../example/shapes.riv";
@@ -52,7 +86,6 @@ static void runExample(uint32_t* buffer)
     }
 
     auto reader = rive::BinaryReader(bytes, length);
-    rive::File* file = nullptr;
     auto result = rive::File::import(reader, &file);
     if (result != rive::ImportResult::success)
     {
@@ -62,6 +95,7 @@ static void runExample(uint32_t* buffer)
     }
 
     artboard = file->artboard();
+    artboard->advance(0.0f);
 
     delete animationInstance;
 
@@ -69,27 +103,23 @@ static void runExample(uint32_t* buffer)
     if (animation != nullptr)
     {
        animationInstance = new rive::LinearAnimationInstance(animation);
-       animationInstance->advance(0);
     }
     else
     {
        animationInstance = nullptr;
     }
 
-    rive::TvgRenderer renderer(canvas.get());
-
-    renderer.save();
-    artboard->advance(0);
-    artboard->draw(&renderer);
-    renderer.restore();
+    lastTime = ecore_time_get();
+    ecore_animator_frametime_set(1. / 60);
+    animator = ecore_animator_add(animationLoop, nullptr);
 
     delete[] bytes;
-    delete file;
 }
 
 
 static void cleanExample()
 {
+    delete file;
     delete animationInstance;
 }
 
@@ -99,7 +129,7 @@ static void setupScreen(uint32_t* buffer)
     Eo* win = elm_win_util_standard_add(NULL, "Rive Viewer");
     evas_object_smart_callback_add(win, "delete,request", deleteWindow, 0);
 
-    Eo* view = evas_object_image_filled_add(evas_object_evas_get(win));
+    view = evas_object_image_filled_add(evas_object_evas_get(win));
     evas_object_image_size_set(view, WIDTH, HEIGHT);
     evas_object_image_data_set(view, buffer);
     evas_object_image_pixels_get_callback_set(view, drawToCanvas, nullptr);
