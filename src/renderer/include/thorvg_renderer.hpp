@@ -10,13 +10,13 @@ using namespace std;
 
 namespace rive
 {
-   struct ThorvgPoint
+   struct TvgPoint
    {
       float x, y;
-      ThorvgPoint(int _x, int _y) : x(_x), y(_y) { }
+      TvgPoint(int _x, int _y) : x(_x), y(_y) { }
    };
 
-   struct ThorvgPaint
+   struct TvgPaint
    {
       int fillColor[4];
       int strokeColor[4];
@@ -24,19 +24,19 @@ namespace rive
       RenderPaintStyle style;
       bool isFill;
       bool isStroke;
-      ThorvgPaint() : isFill(false), isStroke(false) {}
+      TvgPaint() : isFill(false), isStroke(false) {}
    };
 
-   class ThorvgRenderPath : public RenderPath
+   class TvgRenderPath : public RenderPath
    {
    private:
       Shape *m_Path;
       vector<PathCommand> m_PathType;
-      vector<ThorvgPoint> m_PathPoints;
+      vector<TvgPoint> m_PathPoints;
       bool m_Pushed;
 
    public:
-      ThorvgRenderPath();
+      TvgRenderPath();
       Shape* path() { return m_Path; }
       bool getPushed() { return m_Pushed; }
       bool setPushed(bool pushed) { m_Pushed = pushed; }
@@ -49,14 +49,14 @@ namespace rive
       virtual void close() override;
    };
 
-   class ThorvgRenderPaint : public RenderPaint
+   class TvgRenderPaint : public RenderPaint
    {
    private:
-      ThorvgPaint m_Paint;
+      TvgPaint m_Paint;
 
    public:
-      ThorvgRenderPaint();
-      ThorvgPaint* paint() { return &m_Paint; }
+      TvgRenderPaint();
+      TvgPaint* paint() { return &m_Paint; }
       void style(RenderPaintStyle style) override;
       void color(unsigned int value) override;
       void thickness(float value) override;
@@ -70,14 +70,14 @@ namespace rive
       void completeGradient() override;
    };
 
-   class ThorvgRenderer : public Renderer
+   class TvgRenderer : public Renderer
    {
    private:
       Canvas* m_Canvas;
       Mat2D m_Transform;
 
    public:
-      ThorvgRenderer(Canvas* canvas) : m_Canvas(canvas) {}
+      TvgRenderer(Canvas* canvas) : m_Canvas(canvas) {}
       void save() override;
       void restore() override;
       void transform(const Mat2D& transform) override;

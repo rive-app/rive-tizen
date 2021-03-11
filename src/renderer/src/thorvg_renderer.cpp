@@ -4,12 +4,12 @@
 
 using namespace rive;
 
-ThorvgRenderPath::ThorvgRenderPath() : m_Pushed(false)
+TvgRenderPath::TvgRenderPath() : m_Pushed(false)
 {
 	this->m_Path = tvg::Shape::gen().release();
 }
 
-void ThorvgRenderPath::fillRule(FillRule value)
+void TvgRenderPath::fillRule(FillRule value)
 {
 	switch (value)
 	{
@@ -21,10 +21,10 @@ void ThorvgRenderPath::fillRule(FillRule value)
 	}
 }
 
-void ThorvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
+void TvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
 {
-   auto m_PathType = reinterpret_cast<ThorvgRenderPath*>(path)->m_PathType;
-   auto m_PathPoints = reinterpret_cast<ThorvgRenderPath*>(path)->m_PathPoints;
+   auto m_PathType = reinterpret_cast<TvgRenderPath*>(path)->m_PathType;
+   auto m_PathPoints = reinterpret_cast<TvgRenderPath*>(path)->m_PathPoints;
 
    int index = 0;
    for (int i = 0; i < m_PathType.size(); i++)
@@ -53,61 +53,61 @@ void ThorvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
    }
 }
 
-void ThorvgRenderPath::reset()
+void TvgRenderPath::reset()
 {
    m_PathType.clear();
    m_PathPoints.clear();
 }
 
-void ThorvgRenderPath::moveTo(float x, float y)
+void TvgRenderPath::moveTo(float x, float y)
 {
    m_PathType.push_back(PathCommand::MoveTo);
-   m_PathPoints.push_back(ThorvgPoint(x, y));
+   m_PathPoints.push_back(TvgPoint(x, y));
 }
 
-void ThorvgRenderPath::lineTo(float x, float y)
+void TvgRenderPath::lineTo(float x, float y)
 {
    m_PathType.push_back(PathCommand::LineTo);
-   m_PathPoints.push_back(ThorvgPoint(x, y));
+   m_PathPoints.push_back(TvgPoint(x, y));
 }
 
-void ThorvgRenderPath::cubicTo(float ox, float oy, float ix, float iy, float x, float y)
+void TvgRenderPath::cubicTo(float ox, float oy, float ix, float iy, float x, float y)
 {
    m_PathType.push_back(PathCommand::CubicTo);
-   m_PathPoints.push_back(ThorvgPoint(ox, oy));
-   m_PathPoints.push_back(ThorvgPoint(ix, iy));
-   m_PathPoints.push_back(ThorvgPoint(x, y));
+   m_PathPoints.push_back(TvgPoint(ox, oy));
+   m_PathPoints.push_back(TvgPoint(ix, iy));
+   m_PathPoints.push_back(TvgPoint(x, y));
 }
 
-void ThorvgRenderPath::close()
+void TvgRenderPath::close()
 {
    m_PathType.push_back(PathCommand::Close);
 }
 
-void ThorvgRenderer::save()
+void TvgRenderer::save()
 {
 }
 
-void ThorvgRenderer::restore()
+void TvgRenderer::restore()
 {
 }
 
-void ThorvgRenderer::transform(const Mat2D& transform)
+void TvgRenderer::transform(const Mat2D& transform)
 {
    m_Transform = transform;
 }
 
-void ThorvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
+void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
 {
 	Matrix m = {m_Transform[0], 0, m_Transform[4],
                     0, m_Transform[3], m_Transform[5],
                     0, 0, 1};
 
-   ThorvgRenderPath *renderPath = reinterpret_cast<ThorvgRenderPath*>(path);
-   Shape *drawPath = reinterpret_cast<ThorvgRenderPath*>(path)->path();
+   TvgRenderPath *renderPath = reinterpret_cast<TvgRenderPath*>(path);
+   Shape *drawPath = reinterpret_cast<TvgRenderPath*>(path)->path();
    drawPath->transform(m);
 
-   ThorvgPaint *drawPaint = reinterpret_cast<ThorvgRenderPaint*>(paint)->paint();
+   TvgPaint *drawPaint = reinterpret_cast<TvgRenderPaint*>(paint)->paint();
    if (drawPaint->isFill)
      drawPath->fill(drawPaint->fillColor[0], drawPaint->fillColor[1], drawPaint->fillColor[2], drawPaint->fillColor[3]);
    if (drawPaint->isStroke)
@@ -128,17 +128,17 @@ void ThorvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
    }
 }
 
-void ThorvgRenderer::clipPath(RenderPath* path)
+void TvgRenderer::clipPath(RenderPath* path)
 {
 
 }
 
-ThorvgRenderPaint::ThorvgRenderPaint()
+TvgRenderPaint::TvgRenderPaint()
 {
 
 }
 
-void ThorvgRenderPaint::style(RenderPaintStyle style)
+void TvgRenderPaint::style(RenderPaintStyle style)
 {
 	switch (style)
 	{
@@ -152,7 +152,7 @@ void ThorvgRenderPaint::style(RenderPaintStyle style)
 			break;
 	}
 }
-void ThorvgRenderPaint::color(unsigned int value)
+void TvgRenderPaint::color(unsigned int value)
 {
    int b = value >> 0 & 255;
    int g = value >> 8 & 255;
@@ -175,46 +175,46 @@ void ThorvgRenderPaint::color(unsigned int value)
    }
 }
 
-void ThorvgRenderPaint::thickness(float value)
+void TvgRenderPaint::thickness(float value)
 {
    m_Paint.thickness = value;
 }
 
-void ThorvgRenderPaint::join(StrokeJoin value)
+void TvgRenderPaint::join(StrokeJoin value)
 {
 
 }
 
-void ThorvgRenderPaint::cap(StrokeCap value)
+void TvgRenderPaint::cap(StrokeCap value)
 {
 
 }
 
-void ThorvgRenderPaint::linearGradient(float sx, float sy, float ex, float ey)
+void TvgRenderPaint::linearGradient(float sx, float sy, float ex, float ey)
 {
 
 }
 
-void ThorvgRenderPaint::radialGradient(float sx, float sy, float ex, float ey)
+void TvgRenderPaint::radialGradient(float sx, float sy, float ex, float ey)
 {
 }
 
-void ThorvgRenderPaint::addStop(unsigned int color, float stop)
+void TvgRenderPaint::addStop(unsigned int color, float stop)
 {
 }
 
-void ThorvgRenderPaint::completeGradient()
+void TvgRenderPaint::completeGradient()
 {
 
 }
 
-void ThorvgRenderPaint::blendMode(BlendMode value)
+void TvgRenderPaint::blendMode(BlendMode value)
 {
 
 }
 
 namespace rive
 {
-   RenderPath* makeRenderPath() { return new ThorvgRenderPath();}
-   RenderPaint* makeRenderPaint() { return new ThorvgRenderPaint();}
+   RenderPath* makeRenderPath() { return new TvgRenderPath();}
+   RenderPaint* makeRenderPaint() { return new TvgRenderPaint();}
 }

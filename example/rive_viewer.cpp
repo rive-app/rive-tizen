@@ -77,7 +77,7 @@ static void runExample(uint32_t* buffer)
        animationInstance = nullptr;
     }
 
-    rive::ThorvgRenderer renderer(canvas.get());
+    rive::TvgRenderer renderer(canvas.get());
 
     renderer.save();
     artboard->advance(0);
