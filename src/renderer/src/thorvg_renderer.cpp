@@ -42,7 +42,7 @@ void TvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
 {
    auto m_PathType = reinterpret_cast<TvgRenderPath*>(path)->m_PathType;
    auto m_PathPoints = reinterpret_cast<TvgRenderPath*>(path)->m_PathPoints;
-   Vec2D vec1, vec2, vec3, vecOut1, vecOut2, vecOut3;
+   Vec2D vecOut1, vecOut2, vecOut3;
 
    int index = 0;
    for (size_t i = 0; i < m_PathType.size(); i++)
