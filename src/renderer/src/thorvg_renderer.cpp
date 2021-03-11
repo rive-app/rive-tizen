@@ -188,10 +188,13 @@ void TvgRenderPaint::join(StrokeJoin value)
    {
       case rive::StrokeJoin::round:
          m_Paint.join = tvg::StrokeJoin::Round;
+         break;
       case rive::StrokeJoin::bevel:
          m_Paint.join = tvg::StrokeJoin::Bevel;
+         break;
       case rive::StrokeJoin::miter:
          m_Paint.join = tvg::StrokeJoin::Miter;
+         break;
    }
 }
 
@@ -201,10 +204,13 @@ void TvgRenderPaint::cap(StrokeCap value)
    {
       case rive::StrokeCap::butt:
          m_Paint.cap = tvg::StrokeCap::Butt;
+         break;
       case rive::StrokeCap::round:
          m_Paint.cap = tvg::StrokeCap::Round;
+         break;
       case rive::StrokeCap::square:
          m_Paint.cap = tvg::StrokeCap::Square;
+         break;
    }
 }
 
