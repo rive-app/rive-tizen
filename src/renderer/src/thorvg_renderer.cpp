@@ -113,6 +113,8 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
    if (drawPaint->isStroke)
    {
      drawPath->stroke(drawPaint->strokeColor[0], drawPaint->strokeColor[1], drawPaint->strokeColor[2], drawPaint->strokeColor[3]);
+     drawPath->stroke(drawPaint->cap);
+     drawPath->stroke(drawPaint->join);
      if (drawPaint->thickness != 0)
        drawPath->stroke(drawPaint->thickness);
    }
@@ -182,12 +184,28 @@ void TvgRenderPaint::thickness(float value)
 
 void TvgRenderPaint::join(StrokeJoin value)
 {
-
+   switch (value)
+   {
+      case rive::StrokeJoin::round:
+         m_Paint.join = tvg::StrokeJoin::Round;
+      case rive::StrokeJoin::bevel:
+         m_Paint.join = tvg::StrokeJoin::Bevel;
+      case rive::StrokeJoin::miter:
+         m_Paint.join = tvg::StrokeJoin::Miter;
+   }
 }
 
 void TvgRenderPaint::cap(StrokeCap value)
 {
-
+   switch (value)
+   {
+      case rive::StrokeCap::butt:
+         m_Paint.cap = tvg::StrokeCap::Butt;
+      case rive::StrokeCap::round:
+         m_Paint.cap = tvg::StrokeCap::Round;
+      case rive::StrokeCap::square:
+         m_Paint.cap = tvg::StrokeCap::Square;
+   }
 }
 
 void TvgRenderPaint::linearGradient(float sx, float sy, float ex, float ey)
