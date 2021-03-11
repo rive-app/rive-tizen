@@ -10,11 +10,6 @@ using namespace std;
 
 namespace rive
 {
-   struct TvgPoint
-   {
-      float x, y;
-   };
-
    struct TvgPaint
    {
       int fillColor[4];
@@ -32,7 +27,7 @@ namespace rive
    private:
       Shape *m_Shape;
       vector<PathCommand> m_PathType;
-      vector<TvgPoint> m_PathPoints;
+      vector<Vec2D> m_PathPoints;
       bool m_Pushed = false;
 
    public:
