@@ -5,16 +5,11 @@
 #include <vector>
 #include "renderer.hpp"
 
+using namespace tvg;
+using namespace std;
+
 namespace rive
 {
-   enum ThorvgPathType 
-   {
-      MoveTo,
-      LineTo,
-      CubicTo,
-      Close
-   };
-
    struct ThorvgPoint
    {
       float x, y;
@@ -35,14 +30,14 @@ namespace rive
    class ThorvgRenderPath : public RenderPath
    {
    private:
-      tvg::Shape *m_Path;
-      std::vector<ThorvgPathType> m_PathType;
-      std::vector<ThorvgPoint> m_PathPoints;
+      Shape *m_Path;
+      vector<PathCommand> m_PathType;
+      vector<ThorvgPoint> m_PathPoints;
       bool m_Pushed;
 
    public:
       ThorvgRenderPath();
-      tvg::Shape* path() { return m_Path; }
+      Shape* path() { return m_Path; }
       bool getPushed() { return m_Pushed; }
       bool setPushed(bool pushed) { m_Pushed = pushed; }
       void reset() override;
@@ -78,11 +73,11 @@ namespace rive
    class ThorvgRenderer : public Renderer
    {
    private:
-      tvg::Canvas* m_Canvas;
-      rive::Mat2D m_Transform;
+      Canvas* m_Canvas;
+      Mat2D m_Transform;
 
    public:
-      ThorvgRenderer(tvg::Canvas* canvas) : m_Canvas(canvas) {}
+      ThorvgRenderer(Canvas* canvas) : m_Canvas(canvas) {}
       void save() override;
       void restore() override;
       void transform(const Mat2D& transform) override;

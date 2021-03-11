@@ -23,30 +23,30 @@ void ThorvgRenderPath::fillRule(FillRule value)
 
 void ThorvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
 {
-   std::vector<ThorvgPathType> &m_PathType = reinterpret_cast<ThorvgRenderPath*>(path)->m_PathType;
-   std::vector<ThorvgPoint> &m_PathPoints = reinterpret_cast<ThorvgRenderPath*>(path)->m_PathPoints;
+   auto m_PathType = reinterpret_cast<ThorvgRenderPath*>(path)->m_PathType;
+   auto m_PathPoints = reinterpret_cast<ThorvgRenderPath*>(path)->m_PathPoints;
 
    int index = 0;
    for (int i = 0; i < m_PathType.size(); i++)
    {
-      ThorvgPathType type = m_PathType[i];
+      PathCommand type = m_PathType[i];
       switch(type)
       {
-         case ThorvgPathType::MoveTo:
+         case PathCommand::MoveTo:
             m_Path->moveTo(m_PathPoints[index].x, m_PathPoints[index].y);
             index += 1;
             break;
-         case ThorvgPathType::LineTo:
+         case PathCommand::LineTo:
             m_Path->lineTo(m_PathPoints[index].x, m_PathPoints[index].y);
             index += 1;
             break;
-         case ThorvgPathType::CubicTo:
+         case PathCommand::CubicTo:
             m_Path->cubicTo(m_PathPoints[index].x, m_PathPoints[index].y,
                             m_PathPoints[index+1].x, m_PathPoints[index+1].y,
                             m_PathPoints[index+2].x, m_PathPoints[index+2].y);
             index += 3;
             break;
-         case ThorvgPathType::Close:
+         case PathCommand::Close:
             m_Path->close();
             break;
       }
@@ -61,19 +61,19 @@ void ThorvgRenderPath::reset()
 
 void ThorvgRenderPath::moveTo(float x, float y)
 {
-   m_PathType.push_back(ThorvgPathType::MoveTo);
+   m_PathType.push_back(PathCommand::MoveTo);
    m_PathPoints.push_back(ThorvgPoint(x, y));
 }
 
 void ThorvgRenderPath::lineTo(float x, float y)
 {
-   m_PathType.push_back(ThorvgPathType::LineTo);
+   m_PathType.push_back(PathCommand::LineTo);
    m_PathPoints.push_back(ThorvgPoint(x, y));
 }
 
 void ThorvgRenderPath::cubicTo(float ox, float oy, float ix, float iy, float x, float y)
 {
-   m_PathType.push_back(ThorvgPathType::CubicTo);
+   m_PathType.push_back(PathCommand::CubicTo);
    m_PathPoints.push_back(ThorvgPoint(ox, oy));
    m_PathPoints.push_back(ThorvgPoint(ix, iy));
    m_PathPoints.push_back(ThorvgPoint(x, y));
@@ -81,7 +81,7 @@ void ThorvgRenderPath::cubicTo(float ox, float oy, float ix, float iy, float x, 
 
 void ThorvgRenderPath::close()
 {
-   m_PathType.push_back(ThorvgPathType::Close);
+   m_PathType.push_back(PathCommand::Close);
 }
 
 void ThorvgRenderer::save()
@@ -99,12 +99,12 @@ void ThorvgRenderer::transform(const Mat2D& transform)
 
 void ThorvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
 {
-	tvg::Matrix m = {m_Transform[0], 0, m_Transform[4],
+	Matrix m = {m_Transform[0], 0, m_Transform[4],
                     0, m_Transform[3], m_Transform[5],
                     0, 0, 1};
 
    ThorvgRenderPath *renderPath = reinterpret_cast<ThorvgRenderPath*>(path);
-   tvg::Shape *drawPath = reinterpret_cast<ThorvgRenderPath*>(path)->path();
+   Shape *drawPath = reinterpret_cast<ThorvgRenderPath*>(path)->path();
    drawPath->transform(m);
 
    ThorvgPaint *drawPaint = reinterpret_cast<ThorvgRenderPaint*>(paint)->paint();
@@ -119,12 +119,12 @@ void ThorvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
 
    if (!renderPath->getPushed())
    {
-      tvg::Result ret = m_Canvas->push(std::unique_ptr<tvg::Shape>(drawPath));
+      Result ret = m_Canvas->push(unique_ptr<Shape>(drawPath));
       renderPath->setPushed(true);
    }
    else
    {
-      tvg::Result ret = m_Canvas->update(drawPath);
+      Result ret = m_Canvas->update(drawPath);
    }
 }
 
