@@ -152,7 +152,7 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
       shape->stroke(tvgPaint->thickness);
    }
 
-   shape->transform({m_Transform[0], 0, m_Transform[4], 0, m_Transform[3], m_Transform[5], 0, 0, 1});
+   shape->transform({m_Transform[0], m_Transform[2], m_Transform[4], m_Transform[1], m_Transform[3], m_Transform[5], 0, 0, 1});
 
    if (renderPath->onCanvas())
    {
