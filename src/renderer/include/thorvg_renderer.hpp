@@ -42,14 +42,58 @@ namespace rive
       virtual void close() override;
    };
 
+   struct GradientStop
+   {
+      unsigned int color;
+      float stop;
+      GradientStop(unsigned int color, float stop) : color(color), stop(stop)
+      {
+      }
+   };
+
+   class TvgGradientBuilder
+   {
+   public:
+      std::vector<GradientStop> stops;
+      float sx, sy, ex, ey;
+      virtual ~TvgGradientBuilder() {}
+      TvgGradientBuilder(float sx, float sy, float ex, float ey) :
+          sx(sx), sy(sy), ex(ex), ey(ey)
+      {
+      }
+
+      virtual void make(TvgPaint* paint) = 0;
+   };
+
+   class TvgRadialGradientBuilder : public TvgGradientBuilder
+   {
+   public:
+      TvgRadialGradientBuilder(float sx, float sy, float ex, float ey) :
+          TvgGradientBuilder(sx, sy, ex, ey)
+      {
+      }
+      void make(TvgPaint* paint) override;
+   };
+
+   class TvgLinearGradientBuilder : public TvgGradientBuilder
+   {
+   public:
+      TvgLinearGradientBuilder(float sx, float sy, float ex, float ey) :
+          TvgGradientBuilder(sx, sy, ex, ey)
+      {
+      }
+      void make(TvgPaint* paint) override;
+   };
+
    class TvgRenderPaint : public RenderPaint
    {
    private:
       TvgPaint m_Paint;
+      TvgGradientBuilder* m_GradientBuilder;
 
    public:
-      TvgRenderPaint();
       TvgPaint* paint() { return &m_Paint; }
+      TvgRenderPaint();
       void style(RenderPaintStyle style) override;
       void color(unsigned int value) override;
       void thickness(float value) override;
