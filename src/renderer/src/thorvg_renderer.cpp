@@ -225,22 +225,54 @@ void TvgRenderPaint::cap(StrokeCap value)
    }
 }
 
+void TvgRadialGradientBuilder::make(TvgPaint* paint)
+{
+   /* Implements Tvg Radial Gradient Here*/
+   int numStops = stops.size();
+   if (numStops != 0)
+   {
+      unsigned int value = stops[0].color;
+      paint->color[0] = value >> 16 & 255;
+      paint->color[1] = value >> 8 & 255;
+      paint->color[2] = value >> 0 & 255;
+      paint->color[3] = value >> 24 & 255;
+   }
+}
+
+void TvgLinearGradientBuilder::make(TvgPaint* paint)
+{
+   /* Implements Tvg Linear Gradient Here*/
+   int numStops = stops.size();
+
+   if (numStops != 0)
+   {
+      unsigned int value = stops[0].color;
+      paint->color[0] = value >> 16 & 255;
+      paint->color[1] = value >> 8 & 255;
+      paint->color[2] = value >> 0 & 255;
+      paint->color[3] = value >> 24 & 255;
+   }
+}
+
 void TvgRenderPaint::linearGradient(float sx, float sy, float ex, float ey)
 {
-
+   m_GradientBuilder = new TvgLinearGradientBuilder(sx, sy, ex, ey);
 }
 
 void TvgRenderPaint::radialGradient(float sx, float sy, float ex, float ey)
 {
+   m_GradientBuilder = new TvgRadialGradientBuilder(sx, sy, ex, ey);
 }
 
 void TvgRenderPaint::addStop(unsigned int color, float stop)
 {
+   m_GradientBuilder->stops.emplace_back(GradientStop(color, stop));
 }
 
 void TvgRenderPaint::completeGradient()
 {
-
+   m_GradientBuilder->make(&m_Paint);
+   delete m_GradientBuilder;
 }
 
 void TvgRenderPaint::blendMode(BlendMode value)
