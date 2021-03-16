@@ -14,9 +14,13 @@ namespace rive
    {
       uint8_t color[4];
       float thickness;
+      tvg::Fill *gradientFill;
       tvg::StrokeJoin join = tvg::StrokeJoin::Bevel;
       tvg::StrokeCap  cap = tvg::StrokeCap::Butt;
       RenderPaintStyle style;
+      bool isGradient;
+      bool gradientApplied;
+      TvgPaint() : isGradient(false), gradientApplied(false) {}
    };
 
    class TvgRenderPath : public RenderPath

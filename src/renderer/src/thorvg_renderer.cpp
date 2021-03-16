@@ -201,31 +201,49 @@ void TvgRenderPaint::blendMode(BlendMode value)
 
 void TvgRadialGradientBuilder::make(TvgPaint* paint)
 {
-   /* Implements Tvg Radial Gradient Here*/
+   paint->isGradient = true;
    int numStops = stops.size();
-   if (numStops != 0)
+
+   paint->gradientFill = tvg::RadialGradient::gen().release();
+	float radius = Vec2D::distance(Vec2D(sx, sy), Vec2D(ex, ey));
+   static_cast<RadialGradient*>(paint->gradientFill)->radial(sx, sy, radius);
+
+   tvg::Fill::ColorStop colorStops[numStops];
+   for (int i = 0; i < numStops; i++)
    {
-      unsigned int value = stops[0].color;
-      paint->color[0] = value >> 16 & 255;
-      paint->color[1] = value >> 8 & 255;
-      paint->color[2] = value >> 0 & 255;
-      paint->color[3] = value >> 24 & 255;
+      unsigned int value = stops[i].color;
+      uint8_t r = value >> 16 & 255;
+      uint8_t g = value >> 8 & 255;
+      uint8_t b = value >> 0 & 255;
+      uint8_t a = value >> 24 & 255;
+
+      colorStops[i] = {stops[i].stop, r, g, b, a};
    }
+
+   static_cast<RadialGradient*>(paint->gradientFill)->colorStops(colorStops, numStops);
 }
 
 void TvgLinearGradientBuilder::make(TvgPaint* paint)
 {
-   /* Implements Tvg Linear Gradient Here*/
+   paint->isGradient = true;
    int numStops = stops.size();
 
-   if (numStops != 0)
+   paint->gradientFill = tvg::LinearGradient::gen().release();
+   static_cast<LinearGradient*>(paint->gradientFill)->linear(sx, sy, ex, ey);
+
+   tvg::Fill::ColorStop colorStops[numStops];
+   for (int i = 0; i < numStops; i++)
    {
-      unsigned int value = stops[0].color;
-      paint->color[0] = value >> 16 & 255;
-      paint->color[1] = value >> 8 & 255;
-      paint->color[2] = value >> 0 & 255;
-      paint->color[3] = value >> 24 & 255;
+      unsigned int value = stops[i].color;
+      uint8_t r = value >> 16 & 255;
+      uint8_t g = value >> 8 & 255;
+      uint8_t b = value >> 0 & 255;
+      uint8_t a = value >> 24 & 255;
+
+      colorStops[i] = {stops[i].stop, r, g, b, a};
    }
+
+   static_cast<LinearGradient*>(paint->gradientFill)->colorStops(colorStops, numStops);
 }
 
 void TvgRenderer::save()
@@ -254,14 +272,33 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
 
    if (tvgPaint->style == RenderPaintStyle::fill)
    {
-      shape->fill(tvgPaint->color[0], tvgPaint->color[1], tvgPaint->color[2], tvgPaint->color[3]);
+      if (tvgPaint->isGradient == false)
+         shape->fill(tvgPaint->color[0], tvgPaint->color[1], tvgPaint->color[2], tvgPaint->color[3]);
+      else
+      {
+         if (tvgPaint->gradientApplied == false)
+         {
+            shape->fill(unique_ptr<tvg::Fill>(tvgPaint->gradientFill));
+            tvgPaint->gradientApplied = true;
+         }
+      }
    }
    else if (tvgPaint->style == RenderPaintStyle::stroke)
    {
-      shape->stroke(tvgPaint->color[0], tvgPaint->color[1], tvgPaint->color[2], tvgPaint->color[3]);
       shape->stroke(tvgPaint->cap);
       shape->stroke(tvgPaint->join);
       shape->stroke(tvgPaint->thickness);
+
+      if (tvgPaint->isGradient == false)
+         shape->stroke(tvgPaint->color[0], tvgPaint->color[1], tvgPaint->color[2], tvgPaint->color[3]);
+      else
+      {
+        if (tvgPaint->gradientApplied == false)
+        {
+          shape->stroke(unique_ptr<tvg::Fill>(tvgPaint->gradientFill));
+          tvgPaint->gradientApplied = true;
+        }
+      }
    }
 
    shape->transform({m_Transform[0], m_Transform[2], m_Transform[4], m_Transform[1], m_Transform[3], m_Transform[5], 0, 0, 1});
