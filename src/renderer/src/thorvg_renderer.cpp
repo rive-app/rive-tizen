@@ -6,7 +6,7 @@ using namespace rive;
 
 TvgRenderPath::TvgRenderPath()
 {
-	this->m_Shape = tvg::Shape::gen().release();
+   this->m_Shape = tvg::Shape::gen().release();
 }
 
 TvgRenderPath::~TvgRenderPath()
@@ -16,28 +16,28 @@ TvgRenderPath::~TvgRenderPath()
 
 void TvgRenderPath::fillRule(FillRule value)
 {
-	switch (value)
-	{
-		case FillRule::evenOdd:
-			m_Shape->fill(tvg::FillRule::EvenOdd);
-			break;
-		case FillRule::nonZero:
+   switch (value)
+   {
+      case FillRule::evenOdd:
+         m_Shape->fill(tvg::FillRule::EvenOdd);
+         break;
+      case FillRule::nonZero:
          m_Shape->fill(tvg::FillRule::Winding);
-			break;
-	}
+         break;
+   }
 }
 
 Point applyTransform(const Vec2D &vec, const Mat2D &mat)
 {
-	Matrix m = {1, 0, 0, 0, 1, 0, 0, 0, 1};
-	m.e11 = mat[0];
-	m.e12 = mat[2];
-	m.e13 = mat[4];
-	m.e21 = mat[1];
-	m.e22 = mat[3];
-	m.e23 = mat[5];
+   Matrix m = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+   m.e11 = mat[0];
+   m.e12 = mat[2];
+   m.e13 = mat[4];
+   m.e21 = mat[1];
+   m.e22 = mat[3];
+   m.e23 = mat[5];
 
-	return {vec[0] * m.e11 + vec[1] * m.e12 + m.e13, vec[0] * m.e21 + vec[1] * m.e22 + m.e23};
+   return {vec[0] * m.e11 + vec[1] * m.e12 + m.e13, vec[0] * m.e21 + vec[1] * m.e22 + m.e23};
 }
 
 void TvgRenderPath::reset()
