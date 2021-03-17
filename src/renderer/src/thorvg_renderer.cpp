@@ -205,7 +205,7 @@ void TvgRadialGradientBuilder::make(TvgPaint* paint)
    int numStops = stops.size();
 
    paint->gradientFill = tvg::RadialGradient::gen().release();
-	float radius = Vec2D::distance(Vec2D(sx, sy), Vec2D(ex, ey));
+   float radius = Vec2D::distance(Vec2D(sx, sy), Vec2D(ex, ey));
    static_cast<RadialGradient*>(paint->gradientFill)->radial(sx, sy, radius);
 
    tvg::Fill::ColorStop colorStops[numStops];
