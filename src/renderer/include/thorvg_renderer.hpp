@@ -116,6 +116,7 @@ namespace rive
    private:
       Canvas* m_Canvas;
       Mat2D m_Transform;
+      Mat2D m_SaveTransform;
 
    public:
       TvgRenderer(Canvas* canvas) : m_Canvas(canvas) {}
