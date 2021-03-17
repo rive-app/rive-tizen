@@ -142,6 +142,10 @@ Eina_Bool animationLoop(void *data)
 
        rive::TvgRenderer renderer(renderCanvas);
        renderer.save();
+       renderer.align(rive::Fit::contain,
+                      rive::Alignment::center,
+                      rive::AABB(0, 0, WIDTH, HEIGHT),
+                      artboard->bounds());
        artboard->draw(&renderer);
        renderer.restore();
     }

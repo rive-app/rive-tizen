@@ -248,17 +248,17 @@ void TvgLinearGradientBuilder::make(TvgPaint* paint)
 
 void TvgRenderer::save()
 {
-
+   m_SaveTransform = m_Transform;
 }
 
 void TvgRenderer::restore()
 {
-
+   m_Transform = m_SaveTransform;
 }
 
 void TvgRenderer::transform(const Mat2D& transform)
 {
-   m_Transform = transform;
+   m_Transform = m_Transform * transform;
 }
 
 void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
