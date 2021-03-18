@@ -49,12 +49,14 @@ void TvgRenderPath::reset()
 
 void TvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
 {
-   auto m_PathType = static_cast<TvgRenderPath*>(path)->m_PathType;
-   auto m_PathPoints = static_cast<TvgRenderPath*>(path)->m_PathPoints;
-   int index = 0;
+   m_PathType = static_cast<TvgRenderPath*>(path)->m_PathType;
+   /* OPTIMIZE ME: Should avoid data copy here */
+   auto srcPathPoints = static_cast<TvgRenderPath*>(path)->m_PathPoints;
+   m_PathPoints.resize(srcPathPoints.size());
+   std::copy(srcPathPoints.begin(), srcPathPoints.end(), m_PathPoints.begin());
 
    /* OPTIMIZE ME: Should avoid data copy in loop... */
-
+   int index = 0;
    for (size_t i = 0; i < m_PathType.size(); i++)
    {
       /* OPTIMIZE ME: apply transform only when it's not identity */
@@ -63,6 +65,7 @@ void TvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
          case PathCommand::MoveTo:
          {
             auto pt = applyTransform(m_PathPoints[index], transform);
+            m_PathPoints[index] = {pt.x, pt.y};
             m_Shape->moveTo(pt.x, pt.y);
             index += 1;
             break;
@@ -70,6 +73,7 @@ void TvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
          case PathCommand::LineTo:
          {
             auto pt = applyTransform(m_PathPoints[index], transform);
+            m_PathPoints[index] = {pt.x, pt.y};
             m_Shape->lineTo(pt.x, pt.y);
             index += 1;
             break;
@@ -79,6 +83,9 @@ void TvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
             auto pt1 = applyTransform(m_PathPoints[index], transform);
             auto pt2 = applyTransform(m_PathPoints[index + 1], transform);
             auto pt3 = applyTransform(m_PathPoints[index + 2], transform);
+            m_PathPoints[index] = {pt1.x, pt1.y};
+            m_PathPoints[index + 1] = {pt2.x, pt2.y};
+            m_PathPoints[index + 2] = {pt3.x, pt3.y};
             m_Shape->cubicTo(pt1.x, pt1.y, pt2.x, pt2.y, pt3.x, pt3.y);
             index += 3;
             break;
@@ -301,6 +308,13 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
       }
    }
 
+   if (m_ClipPath)
+   {
+      m_ClipPath->fill(255, 255, 255, 255);
+      shape->composite(unique_ptr<Shape>(static_cast<Shape*>(m_ClipPath->duplicate())), tvg::CompositeMethod::ClipPath);
+      m_ClipPath = nullptr;
+   }
+
    shape->transform({m_Transform[0], m_Transform[2], m_Transform[4], m_Transform[1], m_Transform[3], m_Transform[5], 0, 0, 1});
 
    if (renderPath->onCanvas())
@@ -316,7 +330,9 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
 
 void TvgRenderer::clipPath(RenderPath* path)
 {
-
+   //Note: ClipPath transform matrix is calculated by transfrom matrix in addRenderPath function
+   m_ClipPath = static_cast<TvgRenderPath*>(path)->shape();
+   m_ClipPath->transform({m_Transform[0], m_Transform[2], m_Transform[4], m_Transform[1], m_Transform[3], m_Transform[5], 0, 0, 1});
 }
 
 namespace rive
