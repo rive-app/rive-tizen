@@ -1,0 +1,27 @@
+#ifndef _RIVE_LINEAR_ANIMATION_HPP_
+#define _RIVE_LINEAR_ANIMATION_HPP_
+#include "animation/loop.hpp"
+#include "generated/animation/linear_animation_base.hpp"
+#include <vector>
+namespace rive
+{
+	class Artboard;
+	class KeyedObject;
+
+	class LinearAnimation : public LinearAnimationBase
+	{
+	private:
+		std::vector<KeyedObject*> m_KeyedObjects;
+
+	public:
+		~LinearAnimation();
+		StatusCode onAddedDirty(CoreContext* context) override;
+		StatusCode onAddedClean(CoreContext* context) override;
+		void addKeyedObject(KeyedObject* object);
+		void apply(Artboard* artboard, float time, float mix = 1.0f);
+
+		Loop loop() const { return (Loop)loopValue(); }
+	};
+} // namespace rive
+
+#endif

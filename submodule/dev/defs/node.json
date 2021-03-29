@@ -1,0 +1,32 @@
+{
+  "name": "Node",
+  "key": {
+    "int": 2,
+    "string": "node"
+  },
+  "extends": "transform_component.json",
+  "properties": {
+    "x": {
+      "type": "double",
+      "initialValue": "0",
+      "overrideGet": true,
+      "animates": true,
+      "group": "position",
+      "key": {
+        "int": 13,
+        "string": "x"
+      }
+    },
+    "y": {
+      "type": "double",
+      "initialValue": "0",
+      "overrideGet": true,
+      "animates": true,
+      "group": "position",
+      "key": {
+        "int": 14,
+        "string": "y"
+      }
+    }
+  }
+}
