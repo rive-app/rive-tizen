@@ -4,11 +4,28 @@ project('rive_tizen',
         version : '0.1.0',
         license : 'MIT')
 
-add_project_arguments('-DRIVE_FILE_DIR="@0@/example/resource/"'.format(meson.current_source_dir()), language : 'cpp')
+add_project_arguments('-DRIVE_FILE_DIR="/home/rive/resources/"', language : 'cpp')
 
 thorvg_dep = dependency('thorvg', required : true)
 
 run_command('script/install.sh')
+
+resource_files = [
+   'example/resource/blend_knight.riv',
+   'example/resource/blend_knight_nobackground.riv',
+   'example/resource/bone_juice.riv',
+   'example/resource/bone_marty.riv',
+   'example/resource/bone_notebook.riv',
+   'example/resource/clippath_beach_icon.riv',
+   'example/resource/clippath_draworder_calendar_icon.riv',
+   'example/resource/gradation_poision_loader.riv',
+   'example/resource/gradation_weather_icon.riv',
+   'example/resource/shape_heart.riv',
+   'example/resource/shape_phone_drop.riv',
+   'example/resource/trimpath_notification_icon.riv'
+]
+
+install_data(resource_files, install_dir : '/home/rive/resources')
 
 headers = [include_directories('inc')]
 

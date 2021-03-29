@@ -9,6 +9,7 @@ Source0:    %{name}-%{version}.tar.gz
 
 BuildRequires:  pkgconfig
 BuildRequires:  pkgconfig(thorvg)
+BuildRequires:  pkgconfig(elementary)
 
 BuildRequires:  meson
 BuildRequires:  ninja
@@ -53,23 +54,13 @@ ninja -C builddir install
 
 %files
 %defattr(-,root,root,-)
-%{_libdir}/librive-tizen.so.*
+%{_libdir}/librive_tizen.so.*
 %manifest packaging/rive-tizen.manifest
 
 %files devel
 %defattr(-,root,root,-)
-%{_includedir}/rive-tizen/*.hpp
-%{_includedir}/rive-tizen/animation/*.hpp
-%{_includedir}/rive-tizen/boness/*.hpp
-%{_includedir}/rive-tizen/core/*.hpp
-%{_includedir}/rive-tizen/math/*.hpp
-%{_includedir}/rive-tizen/shapes/*.hpp
-%{_includedir}/rive-tizen/shapes/paint/*.hpp
-%{_includedir}/rive-tizen/generated/*.hpp
-%{_includedir}/rive-tizen/generated/animation/*.hpp
-%{_includedir}/rive-tizen/generated/bones/*.hpp
-%{_includedir}/rive-tizen/generated/shapes/*.hpp
-%{_includedir}/rive-tizen/generated/shapes/paint/*.hpp
-%{_libdir}/librive-tizen.so
-%{_bindir}/rive-tizen
-%{_libdir}/pkgconfig/rive-tizen.pc
+%{_includedir}/*.hpp
+%{_libdir}/librive_tizen.so
+%{_bindir}/rive_viewer
+%{_libdir}/pkgconfig/rive_tizen.pc
+/home/rive/resources/*.riv

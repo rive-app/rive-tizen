@@ -11,9 +11,9 @@
 
 using namespace std;
 
-#define WIDTH 1000
-#define HEIGHT 700
-#define LIST_HEIGHT 200
+#define WIDTH 720
+#define HEIGHT 720
+#define LIST_HEIGHT 480
 
 static unique_ptr<tvg::SwCanvas> canvas;
 static tvg::Canvas *renderCanvas;
@@ -198,6 +198,7 @@ static void setupScreen(uint32_t* buffer)
     Eo *fileList = elm_list_add(box);
     evas_object_size_hint_weight_set(fileList, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
     evas_object_size_hint_align_set(fileList, EVAS_HINT_FILL, EVAS_HINT_FILL);
+    evas_object_size_hint_min_set(fileList, WIDTH, LIST_HEIGHT);
 
     // Search Rive Files in Resource Dir
     rivefiles = riveFiles(RIVE_FILE_DIR);
