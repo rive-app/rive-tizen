@@ -15,8 +15,7 @@ using namespace std;
 #define HEIGHT 700
 #define LIST_HEIGHT 200
 
-static unique_ptr<tvg::SwCanvas> canvas;
-static tvg::Canvas *renderCanvas;
+static unique_ptr<tvg::SwCanvas> canvas = nullptr;
 static rive::File* currentFile = nullptr;
 static rive::Artboard* artboard = nullptr;
 static rive::LinearAnimationInstance* animationInstance = nullptr;
@@ -32,10 +31,7 @@ static void deleteWindow(void *data, Evas_Object *obj, void *ev)
 
 static void drawToCanvas(void* data, Eo* obj)
 {
-    if (canvas->draw() == tvg::Result::Success)
-    {
-        canvas->sync();
-    }
+    if (canvas->draw() == tvg::Result::Success) canvas->sync();
 }
 
 static bool isRiveFile(const char *filename)
@@ -47,8 +43,8 @@ static bool isRiveFile(const char *filename)
 
 static void loadRiveFile(const char* filename)
 {
-    // Clear Canvas Buffer
-    renderCanvas->clear();
+    lastTime = ecore_time_get();    //Check point
+    canvas->clear();            //Clear Canvas Buffer
 
     // Load Rive File
     FILE* fp = fopen(filename, "r");
@@ -79,19 +75,14 @@ static void loadRiveFile(const char* filename)
     artboard->advance(0.0f);
 
     delete animationInstance;
-    delete currentFile;
+    animationInstance = nullptr;
 
     auto animation = artboard->firstAnimation<rive::LinearAnimation>();
-    if (animation != nullptr)
-    {
-       animationInstance = new rive::LinearAnimationInstance(animation);
-    }
-    else
-    {
-       animationInstance = nullptr;
-    }
+    if (animation) animationInstance = new rive::LinearAnimationInstance(animation);
 
+    delete currentFile;
     currentFile = file;
+
     delete[] bytes;
 }
 
@@ -100,9 +91,10 @@ static void fileClickedCb (void *data, Evas_Object *obj, void *event_info)
     Elm_Object_Item *item = elm_list_selected_item_get(obj);
     int index = 0;
     for (Elm_Object_Item *iter = item; iter != NULL; iter = elm_list_item_prev(iter))
+    {
        index++;
-    if (rivefiles.size() > 0)
-      loadRiveFile(rivefiles[index-1].c_str());
+    }
+    if (rivefiles.size() > 0) loadRiveFile(rivefiles[index-1].c_str());
 }
 
 static std::vector<std::string> riveFiles(const std::string &dirName)
@@ -111,10 +103,11 @@ static std::vector<std::string> riveFiles(const std::string &dirName)
     struct dirent *dir;
     std::vector<std::string> result;
     d = opendir(dirName.c_str());
-    if (d) {
-      while ((dir = readdir(d)) != NULL) {
-        if (isRiveFile(dir->d_name))
-          result.push_back(dirName + dir->d_name);
+    if (d)
+    {
+      while ((dir = readdir(d)) != NULL)
+      {
+        if (isRiveFile(dir->d_name)) result.push_back(dirName + dir->d_name);
       }
       closedir(d);
     }
@@ -128,27 +121,23 @@ Eina_Bool animationLoop(void *data)
 {
     double currentTime = ecore_time_get();
     float elapsed = currentTime - lastTime;
-    static float animationTime = 0;
     lastTime = currentTime;
 
-    if (artboard != nullptr)
-    {
-       if (animationInstance != nullptr)
-       {
-          animationInstance->advance(elapsed);
-          animationInstance->apply(artboard);
-       }
-       artboard->advance(elapsed);
+    if (!artboard || !animationInstance) return ECORE_CALLBACK_RENEW;
 
-       rive::TvgRenderer renderer(renderCanvas);
-       renderer.save();
-       renderer.align(rive::Fit::contain,
-                      rive::Alignment::center,
-                      rive::AABB(0, 0, WIDTH, HEIGHT),
-                      artboard->bounds());
-       artboard->draw(&renderer);
-       renderer.restore();
-    }
+    animationInstance->advance(elapsed);
+    animationInstance->apply(artboard);
+
+    artboard->advance(elapsed);
+
+    rive::TvgRenderer renderer(canvas.get());
+    renderer.save();
+    renderer.align(rive::Fit::contain,
+                   rive::Alignment::center,
+                   rive::AABB(0, 0, WIDTH, HEIGHT),
+                   artboard->bounds());
+    artboard->draw(&renderer);
+    renderer.restore();
 
     evas_object_image_pixels_dirty_set(view, EINA_TRUE);
     evas_object_image_data_update_add(view, 0, 0, WIDTH, HEIGHT);
@@ -161,10 +150,6 @@ static void runExample(uint32_t* buffer)
     //Create a Canvas
     canvas = tvg::SwCanvas::gen();
     canvas->target(buffer, WIDTH, WIDTH, HEIGHT, tvg::SwCanvas::ARGB8888);
-    renderCanvas = canvas.get();
-
-    lastTime = ecore_time_get();
-    ecore_animator_frametime_set(1. / 60);
     animator = ecore_animator_add(animationLoop, nullptr);
 }
 
@@ -201,10 +186,10 @@ static void setupScreen(uint32_t* buffer)
 
     // Search Rive Files in Resource Dir
     rivefiles = riveFiles(RIVE_FILE_DIR);
-    for (int i = 0; i < rivefiles.size(); i++)
+    for (size_t i = 0; i < rivefiles.size(); i++)
     {
        const char *ptr = strrchr(rivefiles[i].c_str(), '/');
-       Elm_Object_Item *item = elm_list_item_append(fileList, ptr + 1, NULL, NULL, fileClickedCb, NULL);
+       elm_list_item_append(fileList, ptr + 1, NULL, NULL, fileClickedCb, NULL);
     }
     elm_list_go(fileList);
 
