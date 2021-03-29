@@ -4,28 +4,13 @@ project('rive_tizen',
         version : '0.1.0',
         license : 'MIT')
 
+run_command('script/install.sh')
+
 add_project_arguments('-DRIVE_FILE_DIR="@0@/example/resource/"'.format(meson.current_source_dir()), language : 'cpp')
 
 thorvg_dep = dependency('thorvg', required : true)
 
-run_command('script/install.sh')
-
-headers = [include_directories('inc')]
-
-rive_tizen_src = [
-   'src/rive_tizen.cpp',
-]
-
-install_headers([
-                 'inc/rive_tizen.hpp',
-                ])
-
-rive_tizen_dep = declare_dependency(
-   include_directories : include_directories('.'),
-   sources : rive_tizen_src
-)
-
-rive_src = [
+rive_cpp_src = [
    'submodule/src/math/aabb.cpp',
    'submodule/src/math/vec2d.cpp',
    'submodule/src/math/mat2d.cpp',
@@ -91,42 +76,15 @@ rive_src = [
    'submodule/src/transform_component.cpp',
 ]
 
-thorvg_renderer_dep = declare_dependency(
-   include_directories : include_directories(['src/renderer/include']),
-   sources : ['src/renderer/src/thorvg_renderer.cpp'],
-   dependencies : thorvg_dep
+rive_cpp_dep = declare_dependency(
+   include_directories : include_directories('submodule/include'),
+   sources : rive_cpp_src,
 )
 
-rive_dep = declare_dependency(
-   include_directories : include_directories(['submodule/include']),
-   sources : rive_src,
-   dependencies : thorvg_renderer_dep
-)
+headers = [include_directories('inc'), include_directories('submodule/include'), include_directories('src/renderer')]
 
-rive_tizen_lib = library(
-	'rive_tizen',
-	include_directories : [headers],
-	version             : meson.project_version(),
-	dependencies        : [rive_tizen_dep, rive_dep],
-	install             : true,
-	cpp_args            : ['-fno-exceptions', '-fno-rtti'],
-	gnu_symbol_visibility : 'hidden',
-)
-
-rive_tizen_lib_dep = declare_dependency(
-	include_directories : [headers],
-	link_with : rive_tizen_lib
-)
-
-pkg_mod = import('pkgconfig')
-
-pkg_mod.generate(
-        libraries    : rive_tizen_lib,
-        version      : meson.project_version(),
-        name         : 'librive_tizen',
-        filebase     : 'rive_tizen',
-        description  : 'A Rive Animation Tizen Runtime Engine'
-)
+subdir('inc')
+subdir('src')
 
 if get_option('example') == true
 	message('Enable Examples')

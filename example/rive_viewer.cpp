@@ -7,7 +7,7 @@
 #include "animation/linear_animation_instance.hpp"
 #include "artboard.hpp"
 #include "file.hpp"
-#include "thorvg_renderer.hpp"
+#include "tvg_renderer.hpp"
 
 using namespace std;
 
