@@ -1,0 +1,4 @@
+option('example',
+    type: 'boolean',
+    value: false,
+    description: 'Enable building example')

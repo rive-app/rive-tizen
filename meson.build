@@ -128,4 +128,7 @@ pkg_mod.generate(
         description  : 'A Rive Animation Tizen Runtime Engine'
 )
 
-subdir('example')
+if get_option('example') == true
+	message('Enable Examples')
+	subdir('example')
+endif
