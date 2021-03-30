@@ -119,6 +119,8 @@ static std::vector<std::string> riveFiles(const std::string &dirName)
 
 Eina_Bool animationLoop(void *data)
 {
+    canvas->clear();
+
     double currentTime = ecore_time_get();
     float elapsed = currentTime - lastTime;
     lastTime = currentTime;
