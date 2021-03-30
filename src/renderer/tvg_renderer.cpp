@@ -11,7 +11,7 @@ TvgRenderPath::TvgRenderPath()
 
 TvgRenderPath::~TvgRenderPath()
 {
-   if (!active) delete(m_Shape);
+   delete(m_Shape);
 }
 
 void TvgRenderPath::fillRule(FillRule value)
@@ -47,46 +47,6 @@ void TvgRenderPath::reset()
    m_PathPoints.clear();
 }
 
-void TvgRenderPath::buildShape()
-{
-   int index = 0;
-   for (size_t i = 0; i < m_PathType.size(); i++)
-   {
-      switch(m_PathType[i])
-      {
-         case PathCommand::MoveTo:
-         {
-            m_Shape->moveTo(m_PathPoints[index][0], m_PathPoints[index][1]);
-            index += 1;
-            break;
-         }
-         case PathCommand::LineTo:
-         {
-            m_Shape->lineTo(m_PathPoints[index][0], m_PathPoints[index][1]);
-            index += 1;
-            break;
-         }
-         case PathCommand::CubicTo:
-         {
-            m_Shape->cubicTo(m_PathPoints[index][0], m_PathPoints[index][1],
-                             m_PathPoints[index + 1][0], m_PathPoints[index + 1][1],
-                             m_PathPoints[index + 2][0], m_PathPoints[index + 2][1]);
-            index += 3;
-            break;
-         }
-         case PathCommand::Close:
-         {
-            m_Shape->close();
-            index += 1;
-            break;
-         }
-      }
-   }
-
-   m_PathType.clear();
-   m_PathPoints.clear();
-}
-
 void TvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
 {
    m_PathType = static_cast<TvgRenderPath*>(path)->m_PathType;
@@ -97,9 +57,6 @@ void TvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
 
    /* OPTIMIZE ME: Should avoid data copy in loop... */
    int index = 0;
-
-   if (m_PathType.size() != 0)
-     shapeAdded = true;
 
    for (size_t i = 0; i < m_PathType.size(); i++)
    {
@@ -148,12 +105,14 @@ void TvgRenderPath::moveTo(float x, float y)
 {
    m_PathType.push_back(PathCommand::MoveTo);
    m_PathPoints.push_back({x, y});
+   m_Shape->moveTo(x, y);
 }
 
 void TvgRenderPath::lineTo(float x, float y)
 {
    m_PathType.push_back(PathCommand::LineTo);
    m_PathPoints.push_back({x, y});
+   m_Shape->lineTo(x, y);
 }
 
 void TvgRenderPath::cubicTo(float ox, float oy, float ix, float iy, float x, float y)
@@ -162,11 +121,13 @@ void TvgRenderPath::cubicTo(float ox, float oy, float ix, float iy, float x, flo
    m_PathPoints.push_back({ox, oy});
    m_PathPoints.push_back({ix, iy});
    m_PathPoints.push_back({x, y});
+   m_Shape->cubicTo(ox, oy, ix, iy, x, y);
 }
 
 void TvgRenderPath::close()
 {
    m_PathType.push_back(PathCommand::Close);
+   m_Shape->close();
 }
 
 TvgRenderPaint::TvgRenderPaint()
@@ -314,14 +275,11 @@ void TvgRenderer::transform(const Mat2D& transform)
 
 void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
 {
-   auto renderPath = static_cast<TvgRenderPath*>(path);
    auto shape = static_cast<TvgRenderPath*>(path)->shape();
    auto tvgPaint = static_cast<TvgRenderPaint*>(paint)->paint();
 
    /* OPTIMIZE ME: Stroke / Fill Paints required to draw separately.
       thorvg doesn't need to handle both, we can avoid one of them rendering... */
-   if (!renderPath->isShapeAdded())
-     renderPath->buildShape();
 
    if (tvgPaint->style == RenderPaintStyle::fill)
    {
