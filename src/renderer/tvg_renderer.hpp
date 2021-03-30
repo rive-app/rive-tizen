@@ -30,6 +30,7 @@ namespace rive
       vector<PathCommand> m_PathType;
       vector<Vec2D> m_PathPoints;
       bool active = false;
+      bool shapeAdded = false;
 
    public:
       TvgRenderPath();
@@ -37,6 +38,8 @@ namespace rive
       Shape* shape() { return m_Shape; }
       bool onCanvas() { return active; }
       void onCanvas(bool active) { this->active = active; }
+      bool isShapeAdded() { return this->shapeAdded; }
+      void buildShape();
       void reset() override;
       void addRenderPath(RenderPath* path, const Mat2D& transform) override;
       void fillRule(FillRule value) override;
