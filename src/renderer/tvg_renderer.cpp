@@ -362,17 +362,9 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
    }
 
    shape->transform({m_Transform[0], m_Transform[2], m_Transform[4], m_Transform[1], m_Transform[3], m_Transform[5], 0, 0, 1});
-
-   if (renderPath->onCanvas())
-   {
-      m_Canvas->update(shape);
-   }
-   else
-   {
-      m_Canvas->push(unique_ptr<Shape>(shape));
-      renderPath->onCanvas(true);
-   }
+   m_Canvas->push(unique_ptr<Paint>(shape->duplicate()));
 }
+
 
 void TvgRenderer::clipPath(RenderPath* path)
 {
