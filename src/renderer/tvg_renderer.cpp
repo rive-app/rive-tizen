@@ -27,106 +27,69 @@ void TvgRenderPath::fillRule(FillRule value)
    }
 }
 
-Point applyTransform(const Vec2D &vec, const Mat2D &mat)
+Point transformCoord(const Point pt, const Mat2D &transform)
 {
    Matrix m = {1, 0, 0, 0, 1, 0, 0, 0, 1};
-   m.e11 = mat[0];
-   m.e12 = mat[2];
-   m.e13 = mat[4];
-   m.e21 = mat[1];
-   m.e22 = mat[3];
-   m.e23 = mat[5];
+   m.e11 = transform[0];
+   m.e12 = transform[2];
+   m.e13 = transform[4];
+   m.e21 = transform[1];
+   m.e22 = transform[3];
+   m.e23 = transform[5];
 
-   return {vec[0] * m.e11 + vec[1] * m.e12 + m.e13, vec[0] * m.e21 + vec[1] * m.e22 + m.e23};
+   return {pt.x * m.e11 + pt.y * m.e12 + m.e13, pt.x * m.e21 + pt.y * m.e22 + m.e23};
 }
 
 void TvgRenderPath::reset()
 {
    m_Shape->reset();
-   m_PathType.clear();
-   m_PathPoints.clear();
 }
 
 void TvgRenderPath::addRenderPath(RenderPath* path, const Mat2D& transform)
 {
-   m_PathType = static_cast<TvgRenderPath*>(path)->m_PathType;
-   /* OPTIMIZE ME: Should avoid data copy here */
-   auto srcPathPoints = static_cast<TvgRenderPath*>(path)->m_PathPoints;
-   m_PathPoints.resize(srcPathPoints.size());
-   std::copy(srcPathPoints.begin(), srcPathPoints.end(), m_PathPoints.begin());
+   auto srcShape = static_cast<TvgRenderPath*>(path)->shape();
 
-   /* OPTIMIZE ME: Should avoid data copy in loop... */
-   int index = 0;
+   const Point* pts;
+   auto ptsCnt = srcShape->pathCoords(&pts);
+   if (!pts) return;
 
-   for (size_t i = 0; i < m_PathType.size(); i++)
+   const PathCommand* cmds;
+   auto cmdCnt = srcShape->pathCommands(&cmds);
+   if (!cmds) return;
+
+   //Capture the last coordinates
+   Point* pts2;
+   auto ptsCnt2 = m_Shape->pathCoords(const_cast<const Point**>(&pts2));
+
+   m_Shape->appendPath(cmds, cmdCnt, pts, ptsCnt);
+
+   //Immediate Transform for the newly appended
+   Point* pts3;
+   auto ptsCnt3 = m_Shape->pathCoords(const_cast<const Point**>(&pts3));
+
+   for (unsigned i = ptsCnt2; i < ptsCnt3; ++i)
    {
-      /* OPTIMIZE ME: apply transform only when it's not identity */
-      switch(m_PathType[i])
-      {
-         case PathCommand::MoveTo:
-         {
-            auto pt = applyTransform(m_PathPoints[index], transform);
-            m_PathPoints[index] = {pt.x, pt.y};
-            m_Shape->moveTo(pt.x, pt.y);
-            index += 1;
-            break;
-         }
-         case PathCommand::LineTo:
-         {
-            auto pt = applyTransform(m_PathPoints[index], transform);
-            m_PathPoints[index] = {pt.x, pt.y};
-            m_Shape->lineTo(pt.x, pt.y);
-            index += 1;
-            break;
-         }
-         case PathCommand::CubicTo:
-         {
-            auto pt1 = applyTransform(m_PathPoints[index], transform);
-            auto pt2 = applyTransform(m_PathPoints[index + 1], transform);
-            auto pt3 = applyTransform(m_PathPoints[index + 2], transform);
-            m_PathPoints[index] = {pt1.x, pt1.y};
-            m_PathPoints[index + 1] = {pt2.x, pt2.y};
-            m_PathPoints[index + 2] = {pt3.x, pt3.y};
-            m_Shape->cubicTo(pt1.x, pt1.y, pt2.x, pt2.y, pt3.x, pt3.y);
-            index += 3;
-            break;
-         }
-         case PathCommand::Close:
-         {
-            m_Shape->close();
-            index += 1;
-            break;
-         }
-      }
+      pts3[i] = transformCoord(pts3[i], transform);
    }
 }
 
 void TvgRenderPath::moveTo(float x, float y)
 {
-   m_PathType.push_back(PathCommand::MoveTo);
-   m_PathPoints.push_back({x, y});
    m_Shape->moveTo(x, y);
 }
 
 void TvgRenderPath::lineTo(float x, float y)
 {
-   m_PathType.push_back(PathCommand::LineTo);
-   m_PathPoints.push_back({x, y});
    m_Shape->lineTo(x, y);
 }
 
 void TvgRenderPath::cubicTo(float ox, float oy, float ix, float iy, float x, float y)
 {
-   m_PathType.push_back(PathCommand::CubicTo);
-   m_PathPoints.push_back({ox, oy});
-   m_PathPoints.push_back({ix, iy});
-   m_PathPoints.push_back({x, y});
    m_Shape->cubicTo(ox, oy, ix, iy, x, y);
 }
 
 void TvgRenderPath::close()
 {
-   m_PathType.push_back(PathCommand::Close);
    m_Shape->close();
 }
 
@@ -283,11 +246,11 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
 
    if (tvgPaint->style == RenderPaintStyle::fill)
    {
-      if (tvgPaint->isGradient == false)
+      if (!tvgPaint->isGradient)
          shape->fill(tvgPaint->color[0], tvgPaint->color[1], tvgPaint->color[2], tvgPaint->color[3]);
       else
       {
-         if (tvgPaint->gradientApplied == false)
+         if (!tvgPaint->gradientApplied)
          {
             shape->fill(unique_ptr<tvg::Fill>(tvgPaint->gradientFill));
             tvgPaint->gradientApplied = true;
@@ -300,11 +263,11 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
       shape->stroke(tvgPaint->join);
       shape->stroke(tvgPaint->thickness);
 
-      if (tvgPaint->isGradient == false)
+      if (!tvgPaint->isGradient)
          shape->stroke(tvgPaint->color[0], tvgPaint->color[1], tvgPaint->color[2], tvgPaint->color[3]);
       else
       {
-        if (tvgPaint->gradientApplied == false)
+        if (!tvgPaint->gradientApplied)
         {
           shape->stroke(unique_ptr<tvg::Fill>(tvgPaint->gradientFill));
           tvgPaint->gradientApplied = true;

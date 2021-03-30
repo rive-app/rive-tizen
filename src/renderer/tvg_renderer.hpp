@@ -27,8 +27,6 @@ namespace rive
    {
    private:
       Shape *m_Shape;
-      vector<PathCommand> m_PathType;
-      vector<Vec2D> m_PathPoints;
 
    public:
       TvgRenderPath();
