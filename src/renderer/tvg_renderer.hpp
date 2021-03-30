@@ -23,15 +23,12 @@ namespace rive
       TvgPaint() : isGradient(false), gradientApplied(false) {}
    };
 
-   class TvgRenderPath : public RenderPath
+   struct TvgRenderPath : public RenderPath
    {
-   private:
-      Shape *m_Shape;
+      unique_ptr<Shape> tvgShape;
 
-   public:
-      TvgRenderPath();
-      ~TvgRenderPath();
-      Shape* shape() { return m_Shape; }
+      TvgRenderPath() : tvgShape(tvg::Shape::gen()) {}
+
       void buildShape();
       void reset() override;
       void addRenderPath(RenderPath* path, const Mat2D& transform) override;
@@ -39,7 +36,7 @@ namespace rive
       void moveTo(float x, float y) override;
       void lineTo(float x, float y) override;
       void cubicTo(float ox, float oy, float ix, float iy, float x, float y) override;
-      virtual void close() override;
+      void close() override;
    };
 
    struct GradientStop
@@ -93,7 +90,6 @@ namespace rive
 
    public:
       TvgPaint* paint() { return &m_Paint; }
-      TvgRenderPaint();
       void style(RenderPaintStyle style) override;
       void color(unsigned int value) override;
       void thickness(float value) override;
@@ -123,5 +119,6 @@ namespace rive
       void drawPath(RenderPath* path, RenderPaint* paint) override;
       void clipPath(RenderPath* path) override;
    };
-} // namespace rive
+}
+
 #endif
