@@ -1,0 +1,198 @@
+diff --git a/include/animation/linear_animation.hpp b/include/animation/linear_animation.hpp
+index c714847..308b2dd 100644
+--- a/include/animation/linear_animation.hpp
++++ b/include/animation/linear_animation.hpp
+@@ -3,12 +3,17 @@
+ #include "animation/loop.hpp"
+ #include "generated/animation/linear_animation_base.hpp"
+ #include <vector>
++
++#ifndef RIVE_EXPORT
++#define RIVE_EXPORT __attribute__((visibility("default")))
++#endif
++
+ namespace rive
+ {
+ 	class Artboard;
+ 	class KeyedObject;
+ 
+-	class LinearAnimation : public LinearAnimationBase
++	class RIVE_EXPORT LinearAnimation : public LinearAnimationBase
+ 	{
+ 	private:
+ 		std::vector<KeyedObject*> m_KeyedObjects;
+diff --git a/include/animation/linear_animation_instance.hpp b/include/animation/linear_animation_instance.hpp
+index c892f5c..48581eb 100644
+--- a/include/animation/linear_animation_instance.hpp
++++ b/include/animation/linear_animation_instance.hpp
+@@ -2,11 +2,15 @@
+ #define _RIVE_LINEAR_ANIMATION_INSTANCE_HPP_
+ #include "animation/linear_animation.hpp"
+ 
++#ifndef RIVE_EXPORT
++#define RIVE_EXPORT __attribute__((visibility("default")))
++#endif
++
+ namespace rive
+ {
+ 	class LinearAnimation;
+ 
+-	class LinearAnimationInstance
++	class RIVE_EXPORT LinearAnimationInstance
+ 	{
+ 	private:
+ 		LinearAnimation* m_Animation = nullptr;
+diff --git a/include/artboard.hpp b/include/artboard.hpp
+index 23110ac..c0d1d79 100644
+--- a/include/artboard.hpp
++++ b/include/artboard.hpp
+@@ -7,6 +7,11 @@
+ #include "renderer.hpp"
+ #include "shapes/shape_paint_container.hpp"
+ #include <vector>
++
++#ifndef RIVE_EXPORT
++#define RIVE_EXPORT __attribute__((visibility("default")))
++#endif
++
+ namespace rive
+ {
+ 	class File;
+@@ -14,7 +19,7 @@ namespace rive
+ 	class Node;
+ 	class DrawTarget;
+ 
+-	class Artboard : public ArtboardBase,
++	class RIVE_EXPORT Artboard : public ArtboardBase,
+ 	                 public CoreContext,
+ 	                 public ShapePaintContainer
+ 	{
+diff --git a/include/core/binary_reader.hpp b/include/core/binary_reader.hpp
+index 6486dde..5f8496c 100644
+--- a/include/core/binary_reader.hpp
++++ b/include/core/binary_reader.hpp
+@@ -2,11 +2,15 @@
+ #ifndef _RIVE_CORE_BINARY_READER_HPP_
+ #define _RIVE_CORE_BINARY_READER_HPP_
+ 
++#ifndef RIVE_EXPORT
++#define RIVE_EXPORT __attribute__((visibility("default")))
++#endif
++
+ #include <string>
+ 
+ namespace rive
+ {
+-	class BinaryReader
++	class RIVE_EXPORT BinaryReader
+ 	{
+     private:
+         uint8_t* m_Position;
+diff --git a/include/file.hpp b/include/file.hpp
+index 861de0a..f960a79 100644
+--- a/include/file.hpp
++++ b/include/file.hpp
+@@ -7,6 +7,10 @@
+ #include "runtime_header.hpp"
+ #include <vector>
+ 
++#ifndef RIVE_EXPORT
++#define RIVE_EXPORT __attribute__((visibility("default")))
++#endif
++
+ ///
+ /// Default namespace for Rive Cpp runtime code.
+ ///
+@@ -28,7 +32,7 @@ namespace rive
+ 	///
+ 	/// A Rive file.
+ 	///
+-	class File
++	class RIVE_EXPORT File
+ 	{
+ 	public:
+ 		/// Major version number supported by the runtime.
+diff --git a/include/layout.hpp b/include/layout.hpp
+index 682dd2c..c4e09d1 100644
+--- a/include/layout.hpp
++++ b/include/layout.hpp
+@@ -1,5 +1,10 @@
+ #ifndef _RIVE_LAYOUT_HPP_
+ #define _RIVE_LAYOUT_HPP_
++
++#ifndef RIVE_EXPORT
++#define RIVE_EXPORT __attribute__((visibility("default")))
++#endif
++
+ namespace rive
+ {
+ 	enum class Fit : unsigned char
+@@ -13,7 +18,7 @@ namespace rive
+ 		scaleDown
+ 	};
+ 
+-	class Alignment
++	class RIVE_EXPORT Alignment
+ 	{
+ 	private:
+ 		float m_X, m_Y;
+diff --git a/include/math/aabb.hpp b/include/math/aabb.hpp
+index 6e5114e..5299e3a 100644
+--- a/include/math/aabb.hpp
++++ b/include/math/aabb.hpp
+@@ -5,9 +5,13 @@
+ #include "vec2d.hpp"
+ #include <cstddef>
+ 
++#ifndef RIVE_EXPORT
++#define RIVE_EXPORT __attribute__((visibility("default")))
++#endif
++
+ namespace rive
+ {
+-	class AABB
++	class RIVE_EXPORT AABB
+ 	{
+ 	public:
+ 		union
+diff --git a/include/math/mat2d.hpp b/include/math/mat2d.hpp
+index cf6db22..fe43063 100644
+--- a/include/math/mat2d.hpp
++++ b/include/math/mat2d.hpp
+@@ -3,11 +3,15 @@
+ 
+ #include <cstddef>
+ 
++#ifndef RIVE_EXPORT
++#define RIVE_EXPORT __attribute__((visibility("default")))
++#endif
++
+ namespace rive
+ {
+ 	class Vec2D;
+ 	class TransformComponents;
+-	class Mat2D
++	class RIVE_EXPORT Mat2D
+ 	{
+ 	private:
+ 		float m_Buffer[6];
+diff --git a/include/math/vec2d.hpp b/include/math/vec2d.hpp
+index b31590e..0911213 100644
+--- a/include/math/vec2d.hpp
++++ b/include/math/vec2d.hpp
+@@ -3,10 +3,14 @@
+ 
+ #include <cstddef>
+ 
++#ifndef RIVE_EXPORT
++#define RIVE_EXPORT __attribute__((visibility("default")))
++#endif
++
+ namespace rive
+ {
+ 	class Mat2D;
+-	class Vec2D
++	class RIVE_EXPORT Vec2D
+ 	{
+ 	private:
+ 		float m_Buffer[2];

@@ -8,9 +8,13 @@
 using namespace tvg;
 using namespace std;
 
+#ifndef RIVE_EXPORT
+#define RIVE_EXPORT __attribute__((visibility("default")))
+#endif
+
 namespace rive
 {
-   struct TvgPaint
+   struct RIVE_EXPORT TvgPaint
    {
       uint8_t color[4];
       float thickness;
@@ -23,7 +27,7 @@ namespace rive
       TvgPaint() : isGradient(false), gradientApplied(false) {}
    };
 
-   struct TvgRenderPath : public RenderPath
+   struct RIVE_EXPORT TvgRenderPath : public RenderPath
    {
       unique_ptr<Shape> tvgShape;
 
@@ -39,7 +43,7 @@ namespace rive
       void close() override;
    };
 
-   struct GradientStop
+   struct RIVE_EXPORT GradientStop
    {
       unsigned int color;
       float stop;
@@ -48,7 +52,7 @@ namespace rive
       }
    };
 
-   class TvgGradientBuilder
+   class RIVE_EXPORT TvgGradientBuilder
    {
    public:
       std::vector<GradientStop> stops;
@@ -62,7 +66,7 @@ namespace rive
       virtual void make(TvgPaint* paint) = 0;
    };
 
-   class TvgRadialGradientBuilder : public TvgGradientBuilder
+   class RIVE_EXPORT TvgRadialGradientBuilder : public TvgGradientBuilder
    {
    public:
       TvgRadialGradientBuilder(float sx, float sy, float ex, float ey) :
@@ -72,7 +76,7 @@ namespace rive
       void make(TvgPaint* paint) override;
    };
 
-   class TvgLinearGradientBuilder : public TvgGradientBuilder
+   class RIVE_EXPORT TvgLinearGradientBuilder : public TvgGradientBuilder
    {
    public:
       TvgLinearGradientBuilder(float sx, float sy, float ex, float ey) :
@@ -82,7 +86,7 @@ namespace rive
       void make(TvgPaint* paint) override;
    };
 
-   class TvgRenderPaint : public RenderPaint
+   class RIVE_EXPORT TvgRenderPaint : public RenderPaint
    {
    private:
       TvgPaint m_Paint;
@@ -103,7 +107,7 @@ namespace rive
       void completeGradient() override;
    };
 
-   class TvgRenderer : public Renderer
+   class RIVE_EXPORT TvgRenderer : public Renderer
    {
    private:
       Canvas* m_Canvas;
