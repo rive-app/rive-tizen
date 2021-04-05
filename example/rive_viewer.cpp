@@ -77,7 +77,7 @@ static void loadRiveFile(const char* filename)
     delete animationInstance;
     animationInstance = nullptr;
 
-    auto animation = artboard->firstAnimation<rive::LinearAnimation>();
+    auto animation = artboard->firstAnimation();
     if (animation) animationInstance = new rive::LinearAnimationInstance(animation);
 
     delete currentFile;
