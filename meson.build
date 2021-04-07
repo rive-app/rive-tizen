@@ -4,7 +4,7 @@ project('rive_tizen',
         version : '0.1.0',
         license : 'MIT')
 
-add_project_arguments('-DRIVE_FILE_DIR="@0@/example/resource/"'.format(meson.current_source_dir()), language : 'cpp')
+add_project_arguments('-DRIVE_FILE_DIR="@0@/example/resources/"'.format(meson.current_source_dir()), language : 'cpp')
 
 thorvg_dep = dependency('thorvg', required : true)
 
