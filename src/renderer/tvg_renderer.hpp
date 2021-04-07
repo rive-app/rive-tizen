@@ -85,7 +85,7 @@ namespace rive
    {
    private:
       TvgPaint m_Paint;
-      TvgGradientBuilder* m_GradientBuilder;
+      TvgGradientBuilder* m_GradientBuilder = nullptr;
 
    public:
       TvgPaint* paint() { return &m_Paint; }
