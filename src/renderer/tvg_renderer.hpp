@@ -13,14 +13,13 @@ namespace rive
    struct TvgPaint
    {
       uint8_t color[4];
-      float thickness;
-      tvg::Fill *gradientFill;
+      float thickness = 1.0f;
+      tvg::Fill *gradientFill = nullptr;
       tvg::StrokeJoin join = tvg::StrokeJoin::Bevel;
       tvg::StrokeCap  cap = tvg::StrokeCap::Butt;
-      RenderPaintStyle style;
-      bool isGradient;
-      bool gradientApplied;
-      TvgPaint() : isGradient(false), gradientApplied(false) {}
+      RenderPaintStyle style = RenderPaintStyle::fill;
+      bool isGradient = false;
+      bool gradientApplied = false;
    };
 
    struct TvgRenderPath : public RenderPath
