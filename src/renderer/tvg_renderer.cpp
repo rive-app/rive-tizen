@@ -234,11 +234,7 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
          tvgShape->fill(tvgPaint->color[0], tvgPaint->color[1], tvgPaint->color[2], tvgPaint->color[3]);
       else
       {
-         if (!tvgPaint->gradientApplied)
-         {
-            tvgShape->fill(unique_ptr<tvg::Fill>(tvgPaint->gradientFill));
-            tvgPaint->gradientApplied = true;
-         }
+         tvgShape->fill(unique_ptr<tvg::Fill>(tvgPaint->gradientFill->duplicate()));
       }
    }
    else if (tvgPaint->style == RenderPaintStyle::stroke)
@@ -251,11 +247,7 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
          tvgShape->stroke(tvgPaint->color[0], tvgPaint->color[1], tvgPaint->color[2], tvgPaint->color[3]);
       else
       {
-        if (!tvgPaint->gradientApplied)
-        {
-          tvgShape->stroke(unique_ptr<tvg::Fill>(tvgPaint->gradientFill));
-          tvgPaint->gradientApplied = true;
-        }
+         tvgShape->stroke(unique_ptr<tvg::Fill>(tvgPaint->gradientFill->duplicate()));
       }
    }
 
