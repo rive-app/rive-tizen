@@ -19,7 +19,6 @@ namespace rive
       tvg::StrokeCap  cap = tvg::StrokeCap::Butt;
       RenderPaintStyle style = RenderPaintStyle::fill;
       bool isGradient = false;
-      bool gradientApplied = false;
    };
 
    struct TvgRenderPath : public RenderPath
