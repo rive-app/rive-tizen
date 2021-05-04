@@ -32,3 +32,14 @@ executable('animation_mixing',
            dependencies : [elementary_dep, rive_cpp_dep, rive_tizen_dep, rive_tizen_renderer_dep],
 			  link_with: rive_tizen_lib,
            install : true)
+
+demo4_source_file = [
+   'user_interaction_rollinout.cpp'
+]
+
+executable('user_interaction_roll_in_out',
+           demo4_source_file,
+			  include_directories: headers,
+           dependencies : [elementary_dep, rive_cpp_dep, rive_tizen_dep, rive_tizen_renderer_dep],
+			  link_with: rive_tizen_lib,
+           install : true)
