@@ -15,7 +15,7 @@ demo2_source_file = [
    'runtime_property_change.cpp'
 ]
 
-executable('runtime_property_chnage',
+executable('runtime_property_change',
            demo2_source_file,
 			  include_directories: headers,
            dependencies : [elementary_dep, rive_cpp_dep, rive_tizen_dep, rive_tizen_renderer_dep],
