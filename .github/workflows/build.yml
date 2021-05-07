@@ -1,0 +1,64 @@
+name: Build Test
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Install Packages
+      run: |
+        sudo apt-get update
+        sudo apt-get install ninja-build gcc-multilib g++-multilib meson
+
+    - name: Build_thorvg
+        wget -O thorvg.tar.gz https://github.com/Samsung/thorvg/archive/refs/tags/v0.1.0.tar.gz
+        tar -zxvf thorvg.tar.gz
+        cd thorvg-0.1.0
+        meson . build
+        cd build
+        sudo ninja -C . install
+        cd ..
+
+    - name: Build
+      run: |
+        meson . build
+        cd build
+        sudo ninja -C . install
+
+  example_build:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Install Packages
+      run: |
+        sudo apt-get update
+        sudo add-apt-repository ppa:niko2040/e19
+        sudo apt-get install ninja-build gcc-multilib g++-multilib meson
+        sudo apt-get install libefl-dev
+
+    - name: Build_thorvg
+        wget -O thorvg.tar.gz https://github.com/Samsung/thorvg/archive/refs/tags/v0.1.0.tar.gz
+        tar -zxvf thorvg.tar.gz
+        cd thorvg-0.1.0
+        meson . build
+        cd build
+        sudo ninja -C . install
+        cd ..
+
+    - name: Build
+      run: |
+        meson . build -Dexamples=true
+        cd build
+        sudo ninja -C . install
+
