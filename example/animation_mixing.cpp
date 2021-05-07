@@ -91,13 +91,20 @@ static void loadRiveFile(const char* filename)
 
 Eina_Bool animationLoop(void *data)
 {
+    if (!artboard) return ECORE_CALLBACK_RENEW;
+    for (int i = 0; i < 4; i ++)
+    {
+        if (!animationInstance[i])
+        {
+            return ECORE_CALLBACK_RENEW;
+        }
+    }
+
     canvas->clear();
 
     double currentTime = ecore_time_get();
     float elapsed = currentTime - lastTime;
     lastTime = currentTime;
-
-    if (!artboard || !animationInstance) return ECORE_CALLBACK_RENEW;
 
     for (int i = 0; i < 4; i ++)
     {
@@ -139,7 +146,14 @@ static void runExample(uint32_t* buffer)
 
 static void cleanExample()
 {
-    delete animationInstance;
+    for (int i = 0; i < 4; i ++)
+    {
+        if (animationInstance[i])
+        {
+            delete animationInstance[i];
+            animationInstance[i] = nullptr;
+        }
+    }
 }
 
 static void animationChangedCb(void *data, Evas_Object *obj, void *event_info EINA_UNUSED)
