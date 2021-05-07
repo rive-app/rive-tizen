@@ -22,7 +22,6 @@ static rive::Artboard* artboard = nullptr;
 static rive::LinearAnimationInstance* animationInstance;
 static Ecore_Animator *animator = nullptr;
 static Eo* view = nullptr;
-static vector<std::string> rivefiles;
 static double lastTime;
 static Eo* statePopup = nullptr;
 
@@ -113,7 +112,7 @@ Eina_Bool animationLoop(void *data)
 static void runExample(uint32_t* buffer)
 {
     std::string path = RIVE_FILE_DIR;
-    path.append("runtime_color_change.riv");
+    path.append("flame-and-spark.riv");
     loadRiveFile(path.c_str());
 
     //Create a Canvas
@@ -142,12 +141,19 @@ static void mouseMoveCb(void *data, Evas *evas EINA_UNUSED, Evas_Object *obj, vo
    int posy = ev->cur.canvas.y - viewy + 250;
 
    // Get the root instance
-   auto instance = artboard->find("root");
-   auto node = instance->as<rive::Node>();
+   auto root = artboard->find("root");
+   auto nodeRoot = root->as<rive::Node>();
 
-   // The resource scale is 0.5, so It should be divided by 2
-   node->x(posx / 2);
-   node->y(posy / 2);
+   auto spark = artboard->find("spark");
+   auto nodeSpark = spark->as<rive::Node>();
+
+   // Set root position
+   nodeRoot->x(posx);
+   nodeRoot->y(posy);
+
+   // Set spark position, 400 is the constant
+   nodeSpark->x(posx - 400);
+   nodeSpark->y(posy);
 }
 
 static void setupScreen(uint32_t* buffer)
