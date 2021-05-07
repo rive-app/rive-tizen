@@ -19,6 +19,7 @@ jobs:
         sudo apt-get install ninja-build gcc-multilib g++-multilib meson
 
     - name: Build_thorvg
+      run: |
         wget -O thorvg.tar.gz https://github.com/Samsung/thorvg/archive/refs/tags/v0.1.0.tar.gz
         tar -zxvf thorvg.tar.gz
         cd thorvg-0.1.0
@@ -48,6 +49,7 @@ jobs:
         sudo apt-get install libefl-dev
 
     - name: Build_thorvg
+      run: |
         wget -O thorvg.tar.gz https://github.com/Samsung/thorvg/archive/refs/tags/v0.1.0.tar.gz
         tar -zxvf thorvg.tar.gz
         cd thorvg-0.1.0
