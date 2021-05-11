@@ -105,7 +105,7 @@ namespace rive
    {
    private:
       Canvas* m_Canvas;
-      Shape* m_ClipPath;
+      Shape* m_ClipPath = nullptr;
       Mat2D m_Transform;
       Mat2D m_SaveTransform;
 
