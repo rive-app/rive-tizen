@@ -165,7 +165,7 @@ static void animationChangedCb(void *data, Evas_Object *obj, void *event_info EI
 
 static void setupScreen(uint32_t* buffer)
 {
-    Eo* win = elm_win_util_standard_add(nullptr, "Rive Viewer");
+    Eo* win = elm_win_util_standard_add(nullptr, "Rive-Tizen Viewer");
     evas_object_smart_callback_add(win, "delete,request", deleteWindow, 0);
 
     Eo* box = elm_box_add(win);
