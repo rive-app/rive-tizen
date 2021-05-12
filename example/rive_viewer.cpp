@@ -169,6 +169,7 @@ static void runExample(uint32_t* buffer)
 static void cleanExample()
 {
     delete animationInstance;
+    animationInstance = nullptr;
 }
 
 static void animPopupItemCb(void *data EINA_UNUSED, Evas_Object *obj, void *event_info)
