@@ -23,7 +23,6 @@ static rive::LinearAnimationInstance* animationInstance;
 static Ecore_Animator *animator = nullptr;
 static Eo* view = nullptr;
 static double lastTime;
-static Eo* statePopup = nullptr;
 
 static void deleteWindow(void *data, Evas_Object *obj, void *ev)
 {
@@ -129,12 +128,10 @@ static void cleanExample()
 static void mouseMoveCb(void *data, Evas *evas EINA_UNUSED, Evas_Object *obj, void *event_info)
 {
    Evas_Event_Mouse_Move *ev = (Evas_Event_Mouse_Move*)event_info;
-   static bool preIn = false;
-   static bool isIn = false;
 
    int viewx, viewy;
    evas_object_geometry_get(obj, &viewx, &viewy, nullptr, nullptr);
- 
+
    // Viewx and viewy are the view start position
    int posx = ev->cur.canvas.x - viewx;
    // 250 is the constant for align y center
