@@ -1,4 +1,7 @@
+[![Build](https://github.com/rive-app/rive-tizen/actions/workflows/build.yml/badge.svg)](https://github.com/rive-app/rive-tizen/actions/workflows/build.yml)
+
 # Rive-Tizen
+
 ## Build
 ### Prerequiste
 Rive-Tizen requires [ThorVG](https://github.com/Samsung/thorvg) to render Rive graphical units.
