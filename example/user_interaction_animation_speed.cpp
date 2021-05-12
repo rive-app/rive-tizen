@@ -134,6 +134,7 @@ static void cleanExample()
     for (int i = 0; i < 2; i ++)
     {
        delete animationInstance[i];
+       animationInstance[i] = nullptr;
     }
 }
 
