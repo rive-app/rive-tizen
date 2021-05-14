@@ -4,6 +4,11 @@
 #include <Elementary.h>
 #include <rive_tizen.hpp>
 
+#include "node.hpp"
+#include "shapes/paint/fill.hpp"
+#include "shapes/paint/stroke.hpp"
+#include "shapes/paint/color.hpp"
+#include "shapes/paint/solid_color.hpp"
 #include "animation/linear_animation_instance.hpp"
 #include "artboard.hpp"
 #include "file.hpp"
@@ -11,19 +16,23 @@
 
 using namespace std;
 
-#define WIDTH 1000
-#define HEIGHT 700
-#define LIST_HEIGHT 200
-
+#define WIDTH 720
+#define HEIGHT 720
+#define INFOWIDTH 560
+static Eo* win = nullptr;
 static unique_ptr<tvg::SwCanvas> canvas = nullptr;
 static rive::File* currentFile = nullptr;
 static rive::Artboard* artboard = nullptr;
-static rive::LinearAnimationInstance* animationInstance = nullptr;
+bool   enableAnimation[30];
+static rive::LinearAnimationInstance* animationInstance[30];
 static Ecore_Animator *animator = nullptr;
 static Eo* view = nullptr;
 static vector<std::string> rivefiles;
 static double lastTime;
 static Eo* statePopup = nullptr;
+
+std::vector<Eo*> infoWidgets;
+
 
 static void deleteWindow(void *data, Evas_Object *obj, void *ev)
 {
@@ -44,11 +53,13 @@ static bool isRiveFile(const char *filename)
 
 static void initAnimation(int index)
 {
+/*
     delete animationInstance;
     animationInstance = nullptr;
 
     auto animation = artboard->animation(index);
     if (animation) animationInstance = new rive::LinearAnimationInstance(animation);
+*/
 }
 
 static void loadRiveFile(const char* filename)
@@ -84,11 +95,18 @@ static void loadRiveFile(const char* filename)
     artboard = file->artboard();
     artboard->advance(0.0f);
 
-    delete animationInstance;
-    animationInstance = nullptr;
+    for (int i = 0; i<artboard->animationCount(); i++)
+    {
+       delete animationInstance[i];
+       animationInstance[i] = nullptr;
+    }
 
-    auto animation = artboard->firstAnimation();
-    if (animation) animationInstance = new rive::LinearAnimationInstance(animation);
+    for (int i = 0; i<artboard->animationCount(); i++)
+    {
+       auto animation = artboard->animation(i);
+       if (animation) animationInstance[i] = new rive::LinearAnimationInstance(animation);
+       printf("KTH duration:%f\n", animation->durationSeconds());
+    }
 
     delete currentFile;
     currentFile = file;
@@ -96,16 +114,464 @@ static void loadRiveFile(const char* filename)
     delete[] bytes;
 }
 
+//State Based Animation
+static void demo1SelectedCb(void *data EINA_UNUSED, Evas_Object *obj EINA_UNUSED, void *event_info)
+{
+    const char *text = elm_object_item_text_get((Elm_Object_Item*)event_info);
+    int animationIndex = 3;
+    if (!strcmp(text, "Idle"))
+      animationIndex = 3;
+    else if (!strcmp(text, "Happy"))
+      animationIndex = 1;
+    else if (!strcmp(text, "Speak"))
+      animationIndex = 2;
+    else if (!strcmp(text, "Wrong"))
+      animationIndex = 0;
+
+    for (int i=0; i < artboard->animationCount(); i++)
+    {
+       enableAnimation[i] = false;
+       delete animationInstance[i];
+       animationInstance[i] = nullptr;
+       auto animation = artboard->animation(i);
+       if (animation) animationInstance[i] = new rive::LinearAnimationInstance(animation);
+    }
+
+    enableAnimation[animationIndex] = true;
+}
+
+static void demo1()
+{
+    Eo* hoversel = elm_hoversel_add(win);
+    elm_hoversel_auto_update_set(hoversel, EINA_TRUE);
+    elm_hoversel_hover_parent_set(hoversel, win);
+    evas_object_smart_callback_add(hoversel, "selected", demo1SelectedCb, NULL);
+    evas_object_size_hint_weight_set(hoversel, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    evas_object_size_hint_align_set(hoversel, EVAS_HINT_FILL, EVAS_HINT_FILL);
+    elm_object_text_set(hoversel, "Vector Instances");
+    elm_hoversel_item_add(hoversel, "Idle", NULL, ELM_ICON_NONE, NULL, NULL);
+    elm_hoversel_item_add(hoversel, "Happy", NULL, ELM_ICON_NONE, NULL, NULL);
+    elm_hoversel_item_add(hoversel, "Speak", NULL, ELM_ICON_NONE, NULL, NULL);
+    elm_hoversel_item_add(hoversel, "Wrong", NULL, ELM_ICON_NONE, NULL, NULL);
+    evas_object_move(hoversel, WIDTH, HEIGHT/2);
+    evas_object_resize(hoversel, 500, 40);
+    evas_object_show(hoversel);
+}
+
+//State Based Animation (Advanced)
+int demo1_1State = 2;
+static void demo1_1MouseMoveCb(void *data, Evas *evas EINA_UNUSED, Evas_Object *obj, void *event_info)
+{
+   Evas_Event_Mouse_Move *ev = (Evas_Event_Mouse_Move*)event_info;
+
+   int posx = ev->cur.canvas.x;
+   int posy = ev->cur.canvas.y;
+
+   static bool preIn = false;
+   static bool isIn = false;
+
+   if (posx > 300 && posy > 300 && posx < 400 && posy < 400)
+   {
+      isIn = true;
+      if (preIn == isIn) return;
+      preIn = isIn;
+      demo1_1State = 0;
+      enableAnimation[demo1_1State] = true;
+      enableAnimation[1] = false;
+      enableAnimation[2] = false;
+   }
+   else
+   {
+      isIn = false;
+      preIn = false;
+      demo1_1State = 2;
+      enableAnimation[demo1_1State] = true;
+      enableAnimation[0] = false;
+      enableAnimation[1] = false;
+   }
+}
+
+static void mouseUpCb(void *data, Evas *evas EINA_UNUSED, Evas_Object *obj, void *event_info)
+{
+   Evas_Event_Mouse_Up *ev = (Evas_Event_Mouse_Up*)event_info;
+
+   int up_x = ev->canvas.x;
+   int up_y = ev->canvas.y;
+
+   for (int i=0; i < artboard->animationCount(); i++)
+   {
+      enableAnimation[i] = false;
+      delete animationInstance[i];
+      animationInstance[i] = nullptr;
+      auto animation = artboard->animation(i);
+      if (animation) animationInstance[i] = new rive::LinearAnimationInstance(animation);
+   }
+
+   if (up_x > 300 && up_y > 300 && up_x < 400 && up_y < 400)
+   {
+     demo1_1State = 1;
+     enableAnimation[demo1_1State] = true;
+   }
+}
+
+static void demo1_1()
+{
+    evas_object_event_callback_add(view, EVAS_CALLBACK_MOUSE_MOVE, demo1_1MouseMoveCb, nullptr);
+    evas_object_event_callback_add(view, EVAS_CALLBACK_MOUSE_UP, mouseUpCb, nullptr);
+}
+
+//Animation Mixing
+static void animationChangedCb(void *data, Evas_Object *obj, void *event_info EINA_UNUSED)
+{
+    int animationIndex = static_cast<int>(reinterpret_cast<intptr_t>(data));
+    Eina_Bool bEnable = elm_check_state_get(obj);
+    enableAnimation[animationIndex] = bEnable;
+}
+
+static void demo2()
+{
+    Eo* ch1 = elm_check_add(win);
+    elm_object_text_set(ch1, "idle");
+    evas_object_smart_callback_add(ch1, "changed", animationChangedCb, (void*)0);
+    evas_object_show(ch1);
+    evas_object_move(ch1, WIDTH, HEIGHT/2 + 100);
+    evas_object_resize(ch1, 200, 20);
+    infoWidgets.push_back(ch1);
+
+    Eo* ch2 = elm_check_add(win);
+    elm_object_text_set(ch2, "bouncing");
+    evas_object_smart_callback_add(ch2, "changed", animationChangedCb, (void*)1);
+    evas_object_show(ch2);
+    evas_object_move(ch2, WIDTH, HEIGHT/2 + 120);
+    evas_object_resize(ch2, 200, 20);
+    infoWidgets.push_back(ch2);
+
+    Eo* ch3 = elm_check_add(win);
+    elm_object_text_set(ch3, "windshield_wipers");
+    evas_object_smart_callback_add(ch3, "changed", animationChangedCb, (void*)2);
+    evas_object_show(ch3);
+    evas_object_move(ch3, WIDTH, HEIGHT/2 + 140);
+    evas_object_resize(ch3, 200, 20);
+    infoWidgets.push_back(ch3);
+
+    Eo* ch4 = elm_check_add(win);
+    elm_object_text_set(ch4, "broken");
+    evas_object_smart_callback_add(ch4, "changed", animationChangedCb, (void*)3);
+    evas_object_show(ch4);
+    evas_object_move(ch4, WIDTH, HEIGHT/2 + 160);
+    evas_object_resize(ch4, 200, 20);
+    infoWidgets.push_back(ch4);
+}
+
+
+//Runtime Property Change
+std::string currentColorInstance;
+float r, g, b, a;
+Eo *red, *green, *blue, *alpha;
+static void selectedCb(void *data EINA_UNUSED, Evas_Object *obj EINA_UNUSED, void *event_info)
+{
+   const char *text = elm_object_item_text_get((Elm_Object_Item*)event_info);
+   currentColorInstance = text;
+   auto colorInstance = artboard->find<rive::Fill>(currentColorInstance.c_str());
+   if (colorInstance)
+   {
+      int value = colorInstance->paint()->as<rive::SolidColor>()->colorValue();
+      r = value >> 16 & 255;
+      g = value >> 8 & 255;
+      b = value >> 0 & 255;
+      a = value >> 24 & 255;
+      elm_slider_value_set(red, r);
+      elm_slider_value_set(green, g);
+      elm_slider_value_set(blue, b);
+      elm_slider_value_set(alpha, a);
+   }
+}
+
+void colorChangedCb(void *data, Evas_Object *obj, void *event_info EINA_UNUSED)
+{
+   int demoIndex = static_cast<int>(reinterpret_cast<intptr_t>(data));
+   if (demoIndex == 0)
+     r = elm_slider_value_get(obj);
+   else if (demoIndex == 1)
+     g = elm_slider_value_get(obj);
+   else if (demoIndex == 2)
+     b = elm_slider_value_get(obj);
+   else if (demoIndex == 3)
+     a = elm_slider_value_get(obj);
+
+   auto colorInstance = artboard->find<rive::Fill>(currentColorInstance.c_str());
+   if (colorInstance)
+     colorInstance->paint()->as<rive::SolidColor>()->colorValue(rive::colorARGB(a, r, g, b));
+}
+
+static void demo4()
+{
+    Eo* hoversel = elm_hoversel_add(win);
+    elm_hoversel_auto_update_set(hoversel, EINA_TRUE);
+    elm_hoversel_hover_parent_set(hoversel, win);
+    evas_object_smart_callback_add(hoversel, "selected", selectedCb, NULL);
+    evas_object_size_hint_weight_set(hoversel, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    evas_object_size_hint_align_set(hoversel, EVAS_HINT_FILL, EVAS_HINT_FILL);
+    elm_object_text_set(hoversel, "Vector Instances");
+    elm_hoversel_item_add(hoversel, "body_color", NULL, ELM_ICON_NONE, NULL, NULL);
+    elm_hoversel_item_add(hoversel, "straw_color", NULL, ELM_ICON_NONE, NULL, NULL);
+    elm_hoversel_item_add(hoversel, "eye_left_color", NULL, ELM_ICON_NONE, NULL, NULL);
+    elm_hoversel_item_add(hoversel, "eye_right_color", NULL, ELM_ICON_NONE, NULL, NULL);
+    elm_hoversel_item_add(hoversel, "mouse_color", NULL, ELM_ICON_NONE, NULL, NULL);
+    evas_object_move(hoversel, WIDTH, HEIGHT/2);
+    evas_object_resize(hoversel, 500, 40);
+    evas_object_show(hoversel);
+
+    red = elm_slider_add(win);
+    elm_slider_unit_format_set(red, "%d");
+    elm_slider_indicator_format_set(red, "%0.1f");
+    elm_slider_min_max_set(red, 0.0, 255.0);
+    elm_object_text_set(red, "R");
+    elm_slider_step_set(red, 1.0);
+    evas_object_size_hint_align_set(red, EVAS_HINT_FILL, EVAS_HINT_FILL);
+    evas_object_size_hint_weight_set(red, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    elm_slider_value_set(red, 0.0);
+    evas_object_smart_callback_add(red, "changed", colorChangedCb, (void*)0);
+    evas_object_move(red, WIDTH, HEIGHT/2 + 100);
+    evas_object_resize(red, 400, 20);
+    evas_object_show(red);
+
+    green = elm_slider_add(win);
+    elm_slider_unit_format_set(green, "%d");
+    elm_slider_indicator_format_set(green, "%0.1f");
+    elm_slider_min_max_set(green, 0.0, 255.0);
+    elm_object_text_set(green, "G");
+    elm_slider_step_set(green, 1.0);
+    evas_object_size_hint_align_set(green, EVAS_HINT_FILL, EVAS_HINT_FILL);
+    evas_object_size_hint_weight_set(green, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    elm_slider_value_set(green, 0.0);
+    evas_object_smart_callback_add(green, "changed", colorChangedCb, (void*)1);
+    evas_object_move(green, WIDTH, HEIGHT/2 + 120);
+    evas_object_resize(green, 400, 20);
+    evas_object_show(green);
+
+    blue = elm_slider_add(win);
+    elm_slider_unit_format_set(blue, "%d");
+    elm_slider_indicator_format_set(blue, "%0.1f");
+    elm_slider_min_max_set(blue, 0.0, 255.0);
+    elm_object_text_set(blue, "B");
+    elm_slider_step_set(blue, 1.0);
+    evas_object_size_hint_align_set(blue, EVAS_HINT_FILL, EVAS_HINT_FILL);
+    evas_object_size_hint_weight_set(blue, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    elm_slider_value_set(blue, 0.0);
+    evas_object_smart_callback_add(blue, "changed", colorChangedCb, (void*)2);
+    evas_object_move(blue, WIDTH, HEIGHT/2 + 140);
+    evas_object_resize(blue, 400, 20);
+    evas_object_show(blue);
+
+    alpha = elm_slider_add(win);
+    elm_slider_unit_format_set(alpha, "%d");
+    elm_slider_indicator_format_set(alpha, "%0.1f");
+    elm_slider_min_max_set(alpha, 0.0, 255.0);
+    elm_object_text_set(alpha, "A");
+    elm_slider_step_set(alpha, 1.0);
+    evas_object_size_hint_align_set(alpha, EVAS_HINT_FILL, EVAS_HINT_FILL);
+    evas_object_size_hint_weight_set(alpha, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    elm_slider_value_set(alpha, 0.0);
+    evas_object_smart_callback_add(alpha, "changed", colorChangedCb, (void*)3);
+    evas_object_move(alpha, WIDTH, HEIGHT/2 + 160);
+    evas_object_resize(alpha, 400, 20);
+    evas_object_show(alpha);
+
+    infoWidgets.push_back(hoversel);
+    infoWidgets.push_back(red);
+    infoWidgets.push_back(green);
+    infoWidgets.push_back(blue);
+    infoWidgets.push_back(alpha);
+}
+//User Interaction RollInOout
+static void mouseInOutCb(void *data, Evas *evas EINA_UNUSED, Evas_Object *obj, void *event_info)
+{
+   Evas_Event_Mouse_Move *ev = (Evas_Event_Mouse_Move*)event_info;
+   static bool preIn = false;
+   static bool isIn = false;
+
+   int viewx, viewy;
+   evas_object_geometry_get(obj, &viewx, &viewy, nullptr, nullptr);
+
+   int posx = ev->cur.canvas.x - viewx;
+   int posy = ev->cur.canvas.y - viewy;
+
+   // View Bounds
+   if (posx > 100 && posy > 100 && posx < 620 && posy < 620)
+   {
+      isIn = true;
+   }
+   else
+   {
+      isIn = false;
+   }
+
+   if (preIn != isIn)
+   {
+      delete animationInstance[1];
+      animationInstance[1] = nullptr;
+
+      preIn = isIn;
+      if (preIn)
+      {
+         auto animation = artboard->animation(1);
+         if (animation) animationInstance[1] = new rive::LinearAnimationInstance(animation);
+      }
+      else
+      {
+         auto animation = artboard->animation(2);
+         if (animation) animationInstance[1] = new rive::LinearAnimationInstance(animation);
+      }
+   }
+
+   enableAnimation[1] = true;
+}
+
+static void demo3()
+{
+    evas_object_event_callback_add(view, EVAS_CALLBACK_MOUSE_MOVE, mouseInOutCb, nullptr);
+}
+
+
+//User Interaction Follow Curser
+static void mouseMoveCb(void *data, Evas *evas EINA_UNUSED, Evas_Object *obj, void *event_info)
+{
+   Evas_Event_Mouse_Move *ev = (Evas_Event_Mouse_Move*)event_info;
+
+   int viewx, viewy;
+   evas_object_geometry_get(obj, &viewx, &viewy, nullptr, nullptr);
+
+   // Viewx and viewy are the view start position
+   int posx = ev->cur.canvas.x - viewx + 100;
+   // 250 is the constant for align y center
+   int posy = ev->cur.canvas.y - viewy + 250;
+
+   // Get the root instance
+   auto root = artboard->find("root");
+   auto nodeRoot = root->as<rive::Node>();
+
+   auto spark = artboard->find("spark");
+   auto nodeSpark = spark->as<rive::Node>();
+
+   // Set root position
+   nodeRoot->x(posx);
+   nodeRoot->y(posy);
+
+   // Set spark position, 400 is the constant
+   nodeSpark->x(posx - 400);
+   nodeSpark->y(posy);
+}
+
+static void demo5()
+{
+    evas_object_event_callback_add(view, EVAS_CALLBACK_MOUSE_MOVE, mouseMoveCb, nullptr);
+}
+
+//User Interaction View Transition
+Eo* slider;
+bool bTransitionDemo = false;
+float transitionValue = 0.0;
+
+void transitionChangedCb(void *data, Evas_Object *obj, void *event_info EINA_UNUSED)
+{
+    transitionValue = elm_slider_value_get(obj);
+    if (transitionValue == 1.0)
+    {
+      enableAnimation[2] = true;
+      enableAnimation[3] = true;
+    }
+}
+
+static void demo6()
+{
+    slider = elm_slider_add(win);
+    elm_slider_unit_format_set(slider, "%f");
+    elm_slider_indicator_format_set(slider, "%0.1f");
+    elm_slider_min_max_set(slider, 0.0, 1.0);
+    elm_object_text_set(slider, "time");
+    elm_slider_step_set(slider, 0.1);
+    evas_object_size_hint_align_set(slider, EVAS_HINT_FILL, EVAS_HINT_FILL);
+    evas_object_size_hint_weight_set(slider, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    elm_slider_value_set(slider, 0.0);
+    evas_object_smart_callback_add(slider, "changed", transitionChangedCb, (void*)0);
+    evas_object_move(slider, WIDTH, HEIGHT/2 + 100);
+    evas_object_resize(slider, 400, 20);
+    evas_object_show(slider);
+    infoWidgets.push_back(slider);
+}
+
 static void fileClickedCb (void *data, Evas_Object *obj, void *event_info)
 {
-    Elm_Object_Item *item = elm_list_selected_item_get(obj);
-    int index = 0;
-    for (Elm_Object_Item *iter = item; iter != nullptr; iter = elm_list_item_prev(iter))
+    int demoIndex = static_cast<int>(reinterpret_cast<intptr_t>(data));
+    std::string path = RIVE_FILE_DIR;
+
+    for (int i=0; i < infoWidgets.size(); i++)
     {
-       index++;
+       if (infoWidgets[i])
+       {
+          evas_object_del(infoWidgets[i]);
+       }
     }
-    if (rivefiles.size() > 0) loadRiveFile(rivefiles[index-1].c_str());
-    if (statePopup) elm_ctxpopup_dismiss(statePopup);
+
+    infoWidgets.clear();
+    evas_object_event_callback_del_full(view, EVAS_CALLBACK_MOUSE_MOVE, mouseMoveCb, nullptr);
+    evas_object_event_callback_del_full(view, EVAS_CALLBACK_MOUSE_MOVE, mouseInOutCb, nullptr);
+    evas_object_event_callback_del_full(view, EVAS_CALLBACK_MOUSE_MOVE, demo1_1MouseMoveCb, nullptr);
+    evas_object_event_callback_del_full(view, EVAS_CALLBACK_MOUSE_UP, mouseUpCb, nullptr);
+    bTransitionDemo = false;
+
+    for (int i=0; i < 30; i++)
+    {
+       enableAnimation[i] = false;
+    }
+
+    switch (demoIndex)
+    {
+       case 0:
+       path.append("mr-help.riv");
+       loadRiveFile(path.c_str());
+       enableAnimation[3] = true;
+       demo1();
+       break;
+       case 1:
+       path.append("publish-icon.riv");
+       loadRiveFile(path.c_str());
+       enableAnimation[2] = true;
+       demo1_1();
+       break;
+       case 2:
+       path.append("buggy.riv");
+       loadRiveFile(path.c_str());
+       demo2();
+       break;
+       case 3:
+       path.append("teeny_tiny_file.riv");
+       loadRiveFile(path.c_str());
+       enableAnimation[0] = true;
+       demo3();
+       break;
+       case 4:
+       path.append("runtime_color_change.riv");
+       loadRiveFile(path.c_str());
+       enableAnimation[0] = true;
+       demo4();
+       break;
+       case 5:
+       path.append("flame-and-spark.riv");
+       loadRiveFile(path.c_str());
+       enableAnimation[0] = true;
+       demo5();
+       break;
+       case 6:
+       path.append("space_reload.riv");
+       loadRiveFile(path.c_str());
+       enableAnimation[0] = true;
+       enableAnimation[1] = true;
+       demo6();
+       bTransitionDemo = true;
+       break;
+    }
 }
 
 static std::vector<std::string> riveFiles(const std::string &dirName)
@@ -136,10 +602,45 @@ Eina_Bool animationLoop(void *data)
     float elapsed = currentTime - lastTime;
     lastTime = currentTime;
 
-    if (!artboard || !animationInstance) return ECORE_CALLBACK_RENEW;
+    if (!artboard) return ECORE_CALLBACK_RENEW;
 
-    animationInstance->advance(elapsed);
-    animationInstance->apply(artboard);
+    for (int i = 0; i < artboard->animationCount(); i ++)
+    {
+        if (!animationInstance[i])
+        {
+            return ECORE_CALLBACK_RENEW;
+        }
+    }
+
+    if (!bTransitionDemo)
+    {
+       for (int i = 0; i < artboard->animationCount(); i++)
+       {
+          if (enableAnimation[i])
+          {
+             animationInstance[i]->advance(elapsed);
+             animationInstance[i]->apply(artboard);
+             //printf("KTH %f \n", animationInstance[i]->time());
+          }
+       }
+    }
+    else
+    {
+       for (int i = 0; i < artboard->animationCount(); i++)
+       {
+          if (enableAnimation[i])
+          {
+             if (i == 1)
+               animationInstance[i]->time(transitionValue);
+             else
+             {
+               animationInstance[i]->advance(elapsed);
+             }
+             animationInstance[i]->apply(artboard);
+             //printf("KTH %f \n", animationInstance[i]->time());
+          }
+       }
+    }
 
     artboard->advance(elapsed);
 
@@ -168,14 +669,20 @@ static void runExample(uint32_t* buffer)
 
 static void cleanExample()
 {
-    delete animationInstance;
-    animationInstance = nullptr;
+    for (int i = 0; i < artboard->animationCount(); i ++)
+    {
+        if (animationInstance[i])
+        {
+            delete animationInstance[i];
+            animationInstance[i] = nullptr;
+        }
+    }
 }
 
 static void animPopupItemCb(void *data EINA_UNUSED, Evas_Object *obj, void *event_info)
 {
     int animationIndex = static_cast<int>(reinterpret_cast<intptr_t>(data));
-    initAnimation(animationIndex);
+//    initAnimation(animationIndex);
     elm_ctxpopup_dismiss(statePopup);
 }
 
@@ -213,15 +720,10 @@ static void viewClickedCb(void *data, Evas *e EINA_UNUSED, Evas_Object *obj EINA
 
 static void setupScreen(uint32_t* buffer)
 {
-    Eo* win = elm_win_util_standard_add(nullptr, "Rive Viewer");
+    win = elm_win_util_standard_add(nullptr, "Rive Viewer");
     evas_object_smart_callback_add(win, "delete,request", deleteWindow, 0);
 
-    Eo* box = elm_box_add(win);
-    evas_object_size_hint_weight_set(box, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-    elm_win_resize_object_add(win, box);
-    evas_object_show(box);
-
-    view = evas_object_image_filled_add(evas_object_evas_get(box));
+    view = evas_object_image_filled_add(evas_object_evas_get(win));
     evas_object_image_size_set(view, WIDTH, HEIGHT);
     evas_object_image_data_set(view, buffer);
     evas_object_image_pixels_get_callback_set(view, drawToCanvas, nullptr);
@@ -229,15 +731,17 @@ static void setupScreen(uint32_t* buffer)
     evas_object_image_data_update_add(view, 0, 0, WIDTH, HEIGHT);
     evas_object_size_hint_weight_set(view, EVAS_HINT_EXPAND, 0.0);
     evas_object_size_hint_min_set(view, WIDTH, HEIGHT);
+    evas_object_resize(view, WIDTH, HEIGHT);
+    evas_object_move(view, 0, 0);
     evas_object_show(view);
 
-    elm_box_pack_end(box, view);
     evas_object_event_callback_add(view, EVAS_CALLBACK_MOUSE_UP, viewClickedCb, nullptr);
 
-    Eo *fileList = elm_list_add(box);
+    Eo *fileList = elm_list_add(win);
     evas_object_size_hint_weight_set(fileList, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
     evas_object_size_hint_align_set(fileList, EVAS_HINT_FILL, EVAS_HINT_FILL);
 
+/*
     // Search Rive Files in Resource Dir
     rivefiles = riveFiles(RIVE_FILE_DIR);
     for (size_t i = 0; i < rivefiles.size(); i++)
@@ -245,12 +749,21 @@ static void setupScreen(uint32_t* buffer)
        const char *ptr = strrchr(rivefiles[i].c_str(), '/');
        elm_list_item_append(fileList, ptr + 1, nullptr, nullptr, fileClickedCb, nullptr);
     }
+*/
+    elm_list_item_append(fileList, "State Based Animation", nullptr, nullptr, fileClickedCb, (void*)0);
+    elm_list_item_append(fileList, "State Based Animation(Advanced)", nullptr, nullptr, fileClickedCb, (void*)1);
+    elm_list_item_append(fileList, "Animation Mixing", nullptr, nullptr, fileClickedCb, (void*)2);
+    elm_list_item_append(fileList, "Bone Based Animation", nullptr, nullptr, fileClickedCb, (void*)3);
+    elm_list_item_append(fileList, "Runtime Color Change", nullptr, nullptr, fileClickedCb, (void*)4);
+    elm_list_item_append(fileList, "Runtime Position Change", nullptr, nullptr, fileClickedCb, (void*)5);
+    elm_list_item_append(fileList, "View Transition", nullptr, nullptr, fileClickedCb, (void*)6);
     elm_list_go(fileList);
 
-    elm_box_pack_end(box, fileList);
+    evas_object_resize(fileList, INFOWIDTH, HEIGHT/2);
     evas_object_show(fileList);
+    evas_object_move(fileList, WIDTH, 0);
 
-    evas_object_resize(win, WIDTH, HEIGHT + LIST_HEIGHT);
+    evas_object_resize(win, WIDTH + INFOWIDTH , HEIGHT);
     evas_object_show(win);
 }
 
