@@ -65,3 +65,14 @@ executable('user_interaction_animation_speed',
            dependencies : [elementary_dep, rive_cpp_dep, rive_tizen_dep, rive_tizen_renderer_dep],
 			  link_with: rive_tizen_lib,
            install : true)
+
+demo7_source_file = [
+   'user_interaction_touch.cpp'
+]
+
+executable('user_interaction_touch',
+           demo7_source_file,
+			  include_directories: headers,
+           dependencies : [elementary_dep, rive_cpp_dep, rive_tizen_dep, rive_tizen_renderer_dep],
+			  link_with: rive_tizen_lib,
+           install : true)
