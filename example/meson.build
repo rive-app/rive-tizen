@@ -1,78 +1,21 @@
-demo1_source_file = [
-   'rive_viewer.cpp'
-]
-
 elementary_dep = dependency('elementary', required : true)
 
-executable('rive_viewer',
-           demo1_source_file,
-			  include_directories: headers,
-           dependencies : [elementary_dep, rive_cpp_dep, rive_tizen_dep, rive_tizen_renderer_dep],
-			  link_with: rive_tizen_lib,
-           install : true)
-
-demo2_source_file = [
-   'runtime_property_change.cpp'
+source_file = [
+   'rive_viewer.cpp',
+   'runtime_property_change.cpp',
+   'animation_mixing.cpp',
+   'user_interaction_rollinout.cpp',
+   'user_interaction_follow_cursor.cpp',
+   'user_interaction_animation_speed.cpp',
+   'user_interaction_touch.cpp',
 ]
 
-executable('runtime_property_change',
-           demo2_source_file,
-			  include_directories: headers,
-           dependencies : [elementary_dep, rive_cpp_dep, rive_tizen_dep, rive_tizen_renderer_dep],
-			  link_with: rive_tizen_lib,
-           install : true)
+foreach current_file : source_file
+    name = current_file.split('.')[0]
+    executable(name, current_file,
+        include_directories : headers,
+        dependencies : [elementary_dep, rive_cpp_dep, rive_tizen_dep, rive_tizen_renderer_dep],
+        link_with: rive_tizen_lib,
+        install : true)
+endforeach
 
-demo3_source_file = [
-   'animation_mixing.cpp'
-]
-
-executable('animation_mixing',
-           demo3_source_file,
-			  include_directories: headers,
-           dependencies : [elementary_dep, rive_cpp_dep, rive_tizen_dep, rive_tizen_renderer_dep],
-			  link_with: rive_tizen_lib,
-           install : true)
-
-demo4_source_file = [
-   'user_interaction_rollinout.cpp'
-]
-
-executable('user_interaction_roll_in_out',
-           demo4_source_file,
-			  include_directories: headers,
-           dependencies : [elementary_dep, rive_cpp_dep, rive_tizen_dep, rive_tizen_renderer_dep],
-			  link_with: rive_tizen_lib,
-           install : true)
-
-demo5_source_file = [
-   'user_interaction_follow_cursor.cpp'
-]
-
-executable('user_interaction_follow_cursor',
-           demo5_source_file,
-			  include_directories: headers,
-           dependencies : [elementary_dep, rive_cpp_dep, rive_tizen_dep, rive_tizen_renderer_dep],
-			  link_with: rive_tizen_lib,
-           install : true)
-
-demo6_source_file = [
-   'user_interaction_animation_speed.cpp'
-]
-
-executable('user_interaction_animation_speed',
-           demo6_source_file,
-			  include_directories: headers,
-           dependencies : [elementary_dep, rive_cpp_dep, rive_tizen_dep, rive_tizen_renderer_dep],
-			  link_with: rive_tizen_lib,
-           install : true)
-
-demo7_source_file = [
-   'user_interaction_touch.cpp'
-]
-
-executable('user_interaction_touch',
-           demo7_source_file,
-			  include_directories: headers,
-           dependencies : [elementary_dep, rive_cpp_dep, rive_tizen_dep, rive_tizen_renderer_dep],
-			  link_with: rive_tizen_lib,
-           install : true)
