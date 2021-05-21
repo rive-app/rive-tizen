@@ -2,3 +2,9 @@ option('example',
     type: 'boolean',
     value: false,
     description: 'Enable building example')
+
+option('test',
+   type: 'boolean',
+   value: false,
+   description: 'Enable building unit tests')
+

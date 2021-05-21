@@ -107,3 +107,8 @@ if get_option('example') == true
 	message('Enable Examples')
 	subdir('example')
 endif
+
+if get_option('test') == true
+   subdir('test')
+endif
+
