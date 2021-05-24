@@ -23,7 +23,6 @@ static Ecore_Animator *animator = nullptr;
 static Eo* view = nullptr;
 static vector<std::string> rivefiles;
 static double lastTime;
-static Eo* statePopup = nullptr;
 
 static void deleteWindow(void *data, Evas_Object *obj, void *ev)
 {

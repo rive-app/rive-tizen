@@ -24,7 +24,6 @@ static Ecore_Animator *animator = nullptr;
 static Eo* view = nullptr;
 static vector<std::string> rivefiles;
 static double lastTime;
-static Eo* statePopup = nullptr;
 
 std::string currentColorInstance;
 Eo *entryR, *entryG, *entryB, *entryA;

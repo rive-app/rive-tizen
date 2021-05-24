@@ -181,11 +181,9 @@ static void animPopupItemCb(void *data EINA_UNUSED, Evas_Object *obj, void *even
 
 static Elm_Object_Item* animPopupItemNew(Evas_Object *obj, const char *label, int index)
 {
-    Elm_Object_Item *it = nullptr;
-
     if (!obj) return nullptr;
 
-    return elm_ctxpopup_item_append(obj, label, nullptr, animPopupItemCb, (void*)index);
+    return elm_ctxpopup_item_append(obj, label, nullptr, animPopupItemCb, reinterpret_cast<void*>(index));
 }
 
 static void animPopupDismissCb(void *data EINA_UNUSED, Evas_Object *obj, void *event_info EINA_UNUSED)
@@ -202,7 +200,7 @@ static void viewClickedCb(void *data, Evas *e EINA_UNUSED, Evas_Object *obj EINA
     statePopup = elm_ctxpopup_add(obj);
     evas_object_smart_callback_add(statePopup, "dismissed", animPopupDismissCb, nullptr);
 
-    for (int index = 0; index < artboard->animationCount(); index++)
+    for (unsigned index = 0; index < artboard->animationCount(); index++)
       animPopupItemNew(statePopup, artboard->animation(index)->name().c_str(), index);
 
     int x, y;
