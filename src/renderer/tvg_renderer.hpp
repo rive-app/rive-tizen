@@ -3,14 +3,81 @@
 
 #include <thorvg.h>
 #include <vector>
+#include "file.hpp"
+#include "node.hpp"
+#include "shapes/paint/fill.hpp"
+#include "shapes/paint/stroke.hpp"
+#include "shapes/paint/color.hpp"
+#include "shapes/paint/solid_color.hpp"
+#include "artboard.hpp"
+#include "animation/linear_animation.hpp"
+#include "animation/linear_animation_instance.hpp"
 #include "renderer.hpp"
 
 using namespace tvg;
 using namespace std;
 
+#ifndef RIVE_EXPORT
+#define RIVE_EXPORT __attribute__((visibility("default")))
+#endif
+
 namespace rive
 {
-   struct TvgPaint
+   class RIVE_EXPORT TvgFill : public Fill
+   {
+   public:
+      TvgFill(){}
+   };
+
+   class RIVE_EXPORT TvgStroke : public Stroke
+   {
+   public:
+      TvgStroke(){}
+   };
+
+   class RIVE_EXPORT TvgSolidColor : public SolidColor
+   {
+   public:
+      TvgSolidColor(){}
+   };
+
+   class RIVE_EXPORT TvgArtboard : public Artboard
+   {
+   public:
+      TvgArtboard(){}
+   };
+
+   class RIVE_EXPORT TvgFile
+   {
+      rive::File* file;
+   public:
+      TvgFile(){}
+      TvgArtboard* readFile(uint8_t* bytes, size_t length)
+      {
+        auto reader = rive::BinaryReader(bytes, length);
+        auto result = rive::File::import(reader, &file);
+        if (result != rive::ImportResult::success)
+        {
+           return nullptr;
+        }
+
+        return (rive::TvgArtboard*)file->artboard();
+      }
+   };
+
+   class RIVE_EXPORT TvgLinearAnimation : LinearAnimation
+   {
+   public:
+      TvgLinearAnimation(){}
+   };
+
+   class RIVE_EXPORT TvgLinearAnimationInstance : public LinearAnimationInstance
+   {
+   public:
+      TvgLinearAnimationInstance(const TvgLinearAnimation* animation):LinearAnimationInstance((LinearAnimation*)animation){}
+   };
+
+   struct RIVE_EXPORT TvgPaint
    {
       uint8_t color[4];
       float thickness = 1.0f;
@@ -21,7 +88,7 @@ namespace rive
       bool isGradient = false;
    };
 
-   struct TvgRenderPath : public RenderPath
+   struct RIVE_EXPORT TvgRenderPath : public RenderPath
    {
       unique_ptr<Shape> tvgShape;
 
@@ -37,7 +104,7 @@ namespace rive
       void close() override;
    };
 
-   struct GradientStop
+   struct RIVE_EXPORT GradientStop
    {
       unsigned int color;
       float stop;
@@ -46,7 +113,7 @@ namespace rive
       }
    };
 
-   class TvgGradientBuilder
+   class RIVE_EXPORT TvgGradientBuilder
    {
    public:
       std::vector<GradientStop> stops;
@@ -60,7 +127,7 @@ namespace rive
       virtual void make(TvgPaint* paint) = 0;
    };
 
-   class TvgRadialGradientBuilder : public TvgGradientBuilder
+   class RIVE_EXPORT TvgRadialGradientBuilder : public TvgGradientBuilder
    {
    public:
       TvgRadialGradientBuilder(float sx, float sy, float ex, float ey) :
@@ -70,7 +137,7 @@ namespace rive
       void make(TvgPaint* paint) override;
    };
 
-   class TvgLinearGradientBuilder : public TvgGradientBuilder
+   class RIVE_EXPORT TvgLinearGradientBuilder : public TvgGradientBuilder
    {
    public:
       TvgLinearGradientBuilder(float sx, float sy, float ex, float ey) :
@@ -80,7 +147,7 @@ namespace rive
       void make(TvgPaint* paint) override;
    };
 
-   class TvgRenderPaint : public RenderPaint
+   class RIVE_EXPORT TvgRenderPaint : public RenderPaint
    {
    private:
       TvgPaint m_Paint;
@@ -101,7 +168,7 @@ namespace rive
       void completeGradient() override;
    };
 
-   class TvgRenderer : public Renderer
+   class RIVE_EXPORT TvgRenderer : public Renderer
    {
    private:
       Canvas* m_Canvas;

@@ -4,8 +4,8 @@
 #include <Elementary.h>
 #include <rive_tizen.hpp>
 
-#include "animation/linear_animation_instance.hpp"
-#include "artboard.hpp"
+//#include "animation/linear_animation_instance.hpp"
+//#include "artboard.hpp"
 #include "file.hpp"
 #include "tvg_renderer.hpp"
 
@@ -16,9 +16,9 @@ using namespace std;
 #define LIST_HEIGHT 200
 
 static unique_ptr<tvg::SwCanvas> canvas = nullptr;
-static rive::File* currentFile = nullptr;
-static rive::Artboard* artboard = nullptr;
-static rive::LinearAnimationInstance* animationInstance = nullptr;
+static rive::TvgFile* currentFile = nullptr;
+static rive::TvgArtboard* artboard = nullptr;
+static rive::TvgLinearAnimationInstance* animationInstance = nullptr;
 static Ecore_Animator *animator = nullptr;
 static Eo* view = nullptr;
 static vector<std::string> rivefiles;
@@ -47,8 +47,8 @@ static void initAnimation(int index)
     delete animationInstance;
     animationInstance = nullptr;
 
-    auto animation = artboard->animation(index);
-    if (animation) animationInstance = new rive::LinearAnimationInstance(animation);
+    rive::TvgLinearAnimation* animation = (rive::TvgLinearAnimation*)artboard->animation(index);
+    if (animation) animationInstance = new rive::TvgLinearAnimationInstance(animation);
 }
 
 static void loadRiveFile(const char* filename)
@@ -71,27 +71,19 @@ static void loadRiveFile(const char* filename)
        return;
     }
 
-    auto reader = rive::BinaryReader(bytes, length);
-    rive::File* file = nullptr;
-    auto result = rive::File::import(reader, &file);
-    if (result != rive::ImportResult::success)
-    {
-       delete[] bytes;
-       fprintf(stderr, "failed to import %s\n", filename);
-       return;
-    }
+    rive::TvgFile file;
 
-    artboard = file->artboard();
+    artboard = (rive::TvgArtboard*)file.readFile(bytes, length);
     artboard->advance(0.0f);
 
     delete animationInstance;
     animationInstance = nullptr;
 
-    auto animation = artboard->firstAnimation();
-    if (animation) animationInstance = new rive::LinearAnimationInstance(animation);
+    rive::TvgLinearAnimation* animation = (rive::TvgLinearAnimation*)artboard->firstAnimation();
+    if (animation) animationInstance = new rive::TvgLinearAnimationInstance(animation);
 
-    delete currentFile;
-    currentFile = file;
+//    delete currentFile;
+//    currentFile = file;
 
     delete[] bytes;
 }
