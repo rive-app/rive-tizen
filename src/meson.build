@@ -24,8 +24,7 @@ rive_tizen_lib = library(
 	version             : meson.project_version(),
 	dependencies        : [rive_cpp_dep, rive_tizen_dep, rive_tizen_renderer_dep],
 	install             : true,
-	cpp_args            : compiler_flags,
-	gnu_symbol_visibility : 'hidden',
+	cpp_args            : compiler_flags
 )
 
 rive_tizen_lib_dep = declare_dependency(
