@@ -259,15 +259,33 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
    }
 
    tvgShape->transform({m_Transform[0], m_Transform[2], m_Transform[4], m_Transform[1], m_Transform[3], m_Transform[5], 0, 0, 1});
-   m_Canvas->push(unique_ptr<Paint>(tvgShape->duplicate()));
+
+   if (m_BgClipPath)
+   {
+      m_BgClipPath->fill(255, 255, 255, 255);
+      auto scene = tvg::Scene::gen();
+      scene->push(unique_ptr<Paint>(tvgShape->duplicate()));
+      scene->composite(unique_ptr<Shape>(static_cast<Shape*>(m_BgClipPath->duplicate())), tvg::CompositeMethod::ClipPath);
+      m_Canvas->push(move(scene));
+   }
+   else
+      m_Canvas->push(unique_ptr<Paint>(tvgShape->duplicate()));
 }
 
 
 void TvgRenderer::clipPath(RenderPath* path)
 {
    //Note: ClipPath transform matrix is calculated by transfrom matrix in addRenderPath function
-   m_ClipPath = static_cast<TvgRenderPath*>(path)->tvgShape.get();
-   m_ClipPath->transform({m_Transform[0], m_Transform[2], m_Transform[4], m_Transform[1], m_Transform[3], m_Transform[5], 0, 0, 1});
+   if (!m_BgClipPath)
+   {
+      m_BgClipPath = static_cast<TvgRenderPath*>(path)->tvgShape.get();
+      m_BgClipPath->transform({m_Transform[0], m_Transform[2], m_Transform[4], m_Transform[1], m_Transform[3], m_Transform[5], 0, 0, 1});
+   }
+   else
+   {
+      m_ClipPath = static_cast<TvgRenderPath*>(path)->tvgShape.get();
+      m_ClipPath->transform({m_Transform[0], m_Transform[2], m_Transform[4], m_Transform[1], m_Transform[3], m_Transform[5], 0, 0, 1});
+   }
 }
 
 namespace rive
