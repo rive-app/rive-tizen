@@ -8,6 +8,7 @@ source_file = [
    'user_interaction_follow_cursor.cpp',
    'user_interaction_animation_speed.cpp',
    'user_interaction_touch.cpp',
+   'rive_tizen_controller.cpp'
 ]
 
 foreach current_file : source_file
