@@ -1,6 +1,6 @@
 option('example',
     type: 'boolean',
-    value: true,
+    value: false,
     description: 'Enable building example')
 
 option('test',
