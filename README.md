@@ -1,5 +1,3 @@
-[![Build](https://github.com/rive-app/rive-tizen/actions/workflows/build.yml/badge.svg)](https://github.com/rive-app/rive-tizen/actions/workflows/build.yml)
-
 # Rive-Tizen
 
 ## Build
