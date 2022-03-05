@@ -3,6 +3,7 @@
 
 #include <thorvg.h>
 #include <vector>
+#include <stack>
 #include "renderer.hpp"
 
 using namespace tvg;
@@ -108,7 +109,7 @@ namespace rive
       Shape* m_ClipPath = nullptr;
       Shape* m_BgClipPath = nullptr;
       Mat2D m_Transform;
-      Mat2D m_SaveTransform;
+      stack<Mat2D> m_SavedTransforms;
 
    public:
       TvgRenderer(Canvas* canvas) : m_Canvas(canvas) {}

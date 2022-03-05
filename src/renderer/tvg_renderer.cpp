@@ -207,12 +207,17 @@ void TvgLinearGradientBuilder::make(TvgPaint* paint)
 
 void TvgRenderer::save()
 {
-   m_SaveTransform = m_Transform;
+    m_SavedTransforms.push(m_Transform);
 }
 
 void TvgRenderer::restore()
 {
-   m_Transform = m_SaveTransform;
+    // Check shouldn't be needed, but safest to check
+    if (m_SavedTransforms.size() > 0)
+    {
+        m_Transform = m_SavedTransforms.top();
+        m_SavedTransforms.pop();
+    }
 }
 
 void TvgRenderer::transform(const Mat2D& transform)
