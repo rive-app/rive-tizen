@@ -6,7 +6,16 @@ project('rive_tizen',
 
 add_project_arguments('-DRIVE_FILE_DIR="@0@/example/resources/"'.format(meson.current_source_dir()), language : 'cpp')
 
-thorvg_dep = dependency('thorvg', required : true)
+thorvg_dep = dependency('thorvg', required : false)
+if thorvg_dep.found() != true
+    thorvg_dep = declare_dependency(include_directories : include_directories('../thorvg/inc'))
+    if thorvg_dep.found() != true
+        error('ThorVG dependency not found. Looking for ../thorvg')
+    endif
+endif
+if host_machine.system() == 'windows'
+    add_project_arguments('-D_USE_MATH_DEFINES', language: 'cpp')
+endif
 
 rive_cpp_src = [
    'submodule/src/math/aabb.cpp',
