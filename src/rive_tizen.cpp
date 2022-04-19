@@ -41,7 +41,8 @@ bool Controller::loadFile(const char* fileName)
 	std::size_t length = binaryData.size();
 
 	auto reader = rive::BinaryReader(binaryData.data(), length);
-	auto result = rive::File::import(reader, &m_File);
+	rive::ImportResult result;
+	m_File = rive::File::import(reader, &result).get();
 
 	if (result != rive::ImportResult::success)
 	{

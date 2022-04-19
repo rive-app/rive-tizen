@@ -1,9 +1,9 @@
 #include <iostream>
 
-#include "file.hpp"
-#include "math/aabb.hpp"
-#include "artboard.hpp"
-#include "animation/linear_animation_instance.hpp"
+#include "rive/file.hpp"
+#include "rive/math/aabb.hpp"
+#include "rive/artboard.hpp"
+#include "rive/animation/linear_animation_instance.hpp"
 #include "tvg_renderer.hpp"
 
 #ifdef _MSC_VER

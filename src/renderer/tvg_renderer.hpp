@@ -22,71 +22,27 @@ namespace rive
       bool isGradient = false;
    };
 
-   struct TvgRenderPath : public RenderPath
+   class TvgRenderPath : public RenderPath
    {
-      unique_ptr<Shape> tvgShape;
+   private:
+      unique_ptr<Shape> m_Path;
+   public:
+      TvgRenderPath() : m_Path(tvg::Shape::gen()) {}
 
-      TvgRenderPath() : tvgShape(tvg::Shape::gen()) {}
-
-      void buildShape();
+      Shape* path() const { return m_Path.get(); }
       void reset() override;
       void addRenderPath(RenderPath* path, const Mat2D& transform) override;
       void fillRule(FillRule value) override;
       void moveTo(float x, float y) override;
       void lineTo(float x, float y) override;
       void cubicTo(float ox, float oy, float ix, float iy, float x, float y) override;
-      void close() override;
-   };
-
-   struct GradientStop
-   {
-      unsigned int color;
-      float stop;
-      GradientStop(unsigned int color, float stop) : color(color), stop(stop)
-      {
-      }
-   };
-
-   class TvgGradientBuilder
-   {
-   public:
-      std::vector<GradientStop> stops;
-      float sx, sy, ex, ey;
-      virtual ~TvgGradientBuilder() {}
-      TvgGradientBuilder(float sx, float sy, float ex, float ey) :
-          sx(sx), sy(sy), ex(ex), ey(ey)
-      {
-      }
-
-      virtual void make(TvgPaint* paint) = 0;
-   };
-
-   class TvgRadialGradientBuilder : public TvgGradientBuilder
-   {
-   public:
-      TvgRadialGradientBuilder(float sx, float sy, float ex, float ey) :
-          TvgGradientBuilder(sx, sy, ex, ey)
-      {
-      }
-      void make(TvgPaint* paint) override;
-   };
-
-   class TvgLinearGradientBuilder : public TvgGradientBuilder
-   {
-   public:
-      TvgLinearGradientBuilder(float sx, float sy, float ex, float ey) :
-          TvgGradientBuilder(sx, sy, ex, ey)
-      {
-      }
-      void make(TvgPaint* paint) override;
+      virtual void close() override;
    };
 
    class TvgRenderPaint : public RenderPaint
    {
    private:
       TvgPaint m_Paint;
-      TvgGradientBuilder* m_GradientBuilder = nullptr;
-
    public:
       TvgPaint* paint() { return &m_Paint; }
       void style(RenderPaintStyle style) override;
@@ -95,30 +51,37 @@ namespace rive
       void join(StrokeJoin value) override;
       void cap(StrokeCap value) override;
       void blendMode(BlendMode value) override;
+      void shader(rcp<RenderShader>) override;
+   };
 
-      void linearGradient(float sx, float sy, float ex, float ey) override;
-      void radialGradient(float sx, float sy, float ex, float ey) override;
-      void addStop(unsigned int color, float stop) override;
-      void completeGradient() override;
+   class TvgRenderImage : public RenderImage {
+   private:
+      unique_ptr<Picture> m_Image;
+   public:
+      Picture* image() const { return m_Image.get(); };
+      bool decode(Span<const uint8_t>) override;
+      rcp<RenderShader> makeShader(RenderTileMode tx, RenderTileMode ty, const Mat2D* localMatrix) const override;
    };
 
    class TvgRenderer : public Renderer
    {
-   private:
+   protected:
       Canvas* m_Canvas;
       Shape* m_ClipPath = nullptr;
       Shape* m_BgClipPath = nullptr;
       Mat2D m_Transform;
       stack<Mat2D> m_SavedTransforms;
-
    public:
       TvgRenderer(Canvas* canvas) : m_Canvas(canvas) {}
       void save() override;
       void restore() override;
       void transform(const Mat2D& transform) override;
-      void drawPath(RenderPath* path, RenderPaint* paint) override;
       void clipPath(RenderPath* path) override;
+      void drawPath(RenderPath* path, RenderPaint* paint) override;
+      void drawImage(const RenderImage*, BlendMode, float opacity) override;
+      void drawImageMesh(const RenderImage*, rcp<RenderBuffer> vertices_f32, rcp<RenderBuffer> uvCoords_f32, rcp<RenderBuffer> indices_u16, BlendMode, float opacity) override;
    };
-}
+
+} // namespace
 
 #endif
