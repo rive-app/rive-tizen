@@ -6,7 +6,11 @@
 #include "animation/linear_animation_instance.hpp"
 #include "tvg_renderer.hpp"
 
+#ifdef _MSC_VER
+#define RIVE_EXPORT __declspec( dllexport )
+#else
 #define RIVE_EXPORT __attribute__ ((visibility ("default")))
+#endif
 
 RIVE_EXPORT void rive_tizen_print();
 

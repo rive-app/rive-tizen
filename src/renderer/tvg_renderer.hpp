@@ -4,7 +4,7 @@
 #include <thorvg.h>
 #include <vector>
 #include <stack>
-#include "renderer.hpp"
+#include "rive/renderer.hpp"
 
 using namespace tvg;
 using namespace std;
