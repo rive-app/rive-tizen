@@ -1,6 +1,6 @@
 #include "tvg_renderer.hpp"
-#include "math/vec2d.hpp"
-#include "shapes/paint/color.hpp"
+#include "rive/math/vec2d.hpp"
+#include "rive/shapes/paint/color.hpp"
 
 using namespace rive;
 
