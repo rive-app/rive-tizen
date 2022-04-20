@@ -11,49 +11,187 @@ using namespace std;
 
 namespace rive
 {
+
+   /**
+    * @brief Shader
+    * A shader represents a gradient fill or an image fill.
+    */
+   class TvgRenderShader : public RenderShader {
+   private:
+      std::unique_ptr<Fill> m_Fill;
+      std::unique_ptr<Picture> m_Picture;
+   public:
+      /**
+       * @brief Construct a new Render Shader with a gradient fill
+       * @param fill The gradient fill
+       */
+      TvgRenderShader(Fill* fill) : m_Fill(move(fill)){}
+
+      /**
+       * @brief Construct a new Tvg Render Shader with an image fill
+       * @param picture The image fill
+       */
+      TvgRenderShader(Picture* picture) : m_Picture(move(picture)){}
+
+      /**
+       * @brief Get the gradient fill
+       * @return Fill* The gradient fill (or nullptr)
+       */
+      Fill* fill() const { return m_Fill.get(); }
+
+      /**
+       * @brief Get the image fill
+       * @return Picture* The image fill (or nullptr)
+       */
+      Picture* picture() const { return m_Picture.get(); }
+   };
+
+   /**
+    * @brief A struct that describes a paint operation
+    */
    struct TvgPaint
    {
       uint8_t color[4];
       float thickness = 1.0f;
-      tvg::Fill *gradientFill = nullptr;
+      TvgRenderShader* shader = nullptr;
       tvg::StrokeJoin join = tvg::StrokeJoin::Bevel;
       tvg::StrokeCap  cap = tvg::StrokeCap::Butt;
       RenderPaintStyle style = RenderPaintStyle::fill;
-      bool isGradient = false;
+
+      /**
+       * @brief Check if this paint describes a gradient fill
+       */
+      bool isFill(){ return shader && shader->fill(); }
+
+      /**
+       * @brief Check if this paint describes an image fill
+       */
+      bool isPicture(){ return shader && shader->picture(); }
    };
 
+   /**
+    * @brief ThorVG implementation of RenderPath
+    */
    class TvgRenderPath : public RenderPath
    {
    private:
       unique_ptr<Shape> m_Path;
    public:
+      /**
+       * @brief Construct a new Render Path object
+       */
       TvgRenderPath() : m_Path(tvg::Shape::gen()) {}
 
+      /**
+       * @brief Get the path
+       */
       Shape* path() const { return m_Path.get(); }
+
+      /**
+       * @brief Reset the path
+       */
       void reset() override;
+
+      /**
+       * @brief Append a path
+       * 
+       * @param path The path to append
+       * @param transform The transform
+       */
       void addRenderPath(RenderPath* path, const Mat2D& transform) override;
+
+      /**
+       * @brief Set the fill rule
+       */
       void fillRule(FillRule value) override;
+
+      /**
+       * @brief Move to a point without drawing a line
+       * @param x The X coordinate
+       * @param y The Y coordinate
+       */
       void moveTo(float x, float y) override;
+
+      /**
+       * @brief Draw line from current position to a point
+       * @param x The X coordinate
+       * @param y The Y coordinate
+       */
       void lineTo(float x, float y) override;
+
+      /**
+       * @brief Draw cubic curve from current position to a point
+       * @param ox First control point X coordinate
+       * @param oy First control point Y coordinate
+       * @param ix Second control point X coordinate
+       * @param iy Second control point Y coordinate
+       * @param x The X coordinate
+       * @param y The Y coordinate
+       */
       void cubicTo(float ox, float oy, float ix, float iy, float x, float y) override;
+
+      /**
+       * @brief Close the current shape
+       */
       virtual void close() override;
    };
 
+   /**
+    * @brief ThorVG implementation of RenderPaint
+    */
    class TvgRenderPaint : public RenderPaint
    {
    private:
       TvgPaint m_Paint;
    public:
+      /**
+       * @brief Get the paint
+       */
       TvgPaint* paint() { return &m_Paint; }
+
+      /**
+       * @brief Set the style
+       * @param style The style (stroke, fill)
+       */
       void style(RenderPaintStyle style) override;
+
+      /**
+       * @brief Set the color ARGB
+       * @param value The color in ARGB format
+       */
       void color(unsigned int value) override;
+
+      /**
+       * @brief Set the thickness
+       */
       void thickness(float value) override;
+
+      /**
+       * @brief Set the join style
+       */
       void join(StrokeJoin value) override;
+
+      /**
+       * @brief Set the cap style
+       */
       void cap(StrokeCap value) override;
-      void blendMode(BlendMode value) override;
-      void shader(rcp<RenderShader>) override;
+
+      /**
+       * @brief Set the blend mode
+       * TODO: Implement this!
+       */
+      void blendMode(BlendMode value) override {}
+
+      /**
+       * @brief Set the shader
+       * @param shader The shader
+       */
+      void shader(rcp<RenderShader> shader) override;
    };
 
+   /**
+    * @brief ThorVG implementation of RenderImage
+    */
    class TvgRenderImage : public RenderImage {
    private:
       unique_ptr<Picture> m_Image;
@@ -63,6 +201,10 @@ namespace rive
       rcp<RenderShader> makeShader(RenderTileMode tx, RenderTileMode ty, const Mat2D* localMatrix) const override;
    };
 
+   /**
+    * @brief Renders rive files
+    * 
+    */
    class TvgRenderer : public Renderer
    {
    protected:
@@ -72,11 +214,38 @@ namespace rive
       Mat2D m_Transform;
       stack<Mat2D> m_SavedTransforms;
    public:
+      /**
+       * @brief Construct a new Renderer
+       * @param canvas The canvas to render to
+       */
       TvgRenderer(Canvas* canvas) : m_Canvas(canvas) {}
+
+      /**
+       * @brief Save the current transform
+       * @see restore
+       */
       void save() override;
+
+      /**
+       * @brief Restore the last saved transform
+       * @see save
+       */
       void restore() override;
+
+      /**
+       * @brief Apply a transform
+       * Multiplies the transform
+       * @param transform The matrix
+       */
       void transform(const Mat2D& transform) override;
+
+      /**
+       * @brief Set the current clipping path
+       * @param path The clip path
+       */
       void clipPath(RenderPath* path) override;
+
+
       void drawPath(RenderPath* path, RenderPaint* paint) override;
       void drawImage(const RenderImage*, BlendMode, float opacity) override;
       void drawImageMesh(const RenderImage*, rcp<RenderBuffer> vertices_f32, rcp<RenderBuffer> uvCoords_f32, rcp<RenderBuffer> indices_u16, BlendMode, float opacity) override;
