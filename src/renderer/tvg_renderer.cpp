@@ -185,6 +185,25 @@ void TvgRenderPaint::shader(rcp<RenderShader> shader)
    m_Paint.shader = (TvgRenderShader*)(shader.get());
 }
 
+bool TvgRenderImage::decode(Span<const uint8_t> data)
+{
+   m_Image = Picture::gen();
+   auto res = m_Image->load((const char *)data.data(), data.size(), "");
+
+   return res == tvg::Result::Success;
+}
+
+rcp<RenderShader> TvgRenderImage::makeShader(RenderTileMode tx, RenderTileMode ty, const Mat2D* localMatrix) const
+{
+   // TODO: Not sure if this is the correct way to do it, because the shader
+   // will now own m_Image and may free it. Is this ok?
+   TvgRenderShader* shader = new TvgRenderShader(m_Image.get());
+
+   // TODO: Implement tx, ty and localMatrix
+
+   return rcp<RenderShader>(shader);
+}
+
 void TvgRenderer::save()
 {
     m_SavedTransforms.push(m_Transform);
@@ -237,7 +256,7 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
 
       if (tvgPaint->isPicture())
       {
-         // TODO: fille tvgShape with image
+         // TODO: fill tvgShape with image
          // The image is in tvgPaint->shader->picture()
       }
       else if (tvgPaint->isFill())

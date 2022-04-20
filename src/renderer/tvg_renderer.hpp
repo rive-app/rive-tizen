@@ -196,8 +196,31 @@ namespace rive
    private:
       unique_ptr<Picture> m_Image;
    public:
+      /**
+       * @brief Get the image as a Picture
+       */
       Picture* image() const { return m_Image.get(); };
+
+      /**
+       * @brief Decode an image
+       * 
+       * TODO: Implement this!
+       * 
+       * @return true Succeeded
+       * @return false Failed
+       */
       bool decode(Span<const uint8_t>) override;
+
+      /**
+       * @brief Create an image fill shader from this RenderImage
+       * 
+       * TODO: Implement this!
+       * 
+       * @param tx The tiling mode in the X direction
+       * @param ty The tiling mode in the Y direction
+       * @param localMatrix The transform matrix
+       * @return rcp<RenderShader> An image fill shader
+       */
       rcp<RenderShader> makeShader(RenderTileMode tx, RenderTileMode ty, const Mat2D* localMatrix) const override;
    };
 
