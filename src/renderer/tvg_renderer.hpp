@@ -275,9 +275,33 @@ namespace rive
        */
       void clipPath(RenderPath* path) override;
 
-
+      /**
+       * @brief Draw
+       * 
+       * @param path The path to draw 
+       * @param paint The paint to use while drawing
+       */
       void drawPath(RenderPath* path, RenderPaint* paint) override;
+
+      /**
+       * @brief 
+       * 
+       * TODO: Implement this!
+       * 
+       * @param opacity 
+       */
       void drawImage(const RenderImage*, BlendMode, float opacity) override;
+
+      /**
+       * @brief
+       * 
+       * TODO: Implement this!
+       * 
+       * @param vertices_f32 
+       * @param uvCoords_f32 
+       * @param indices_u16 
+       * @param opacity 
+       */
       void drawImageMesh(const RenderImage*, rcp<RenderBuffer> vertices_f32, rcp<RenderBuffer> uvCoords_f32, rcp<RenderBuffer> indices_u16, BlendMode, float opacity) override;
    };
 

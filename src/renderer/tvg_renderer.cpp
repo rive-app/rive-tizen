@@ -309,6 +309,16 @@ void TvgRenderer::clipPath(RenderPath* path)
    }
 }
 
+void TvgRenderer::drawImage(const RenderImage*, BlendMode, float opacity)\
+{
+   // TODO: Implement this!
+}
+
+void TvgRenderer::drawImageMesh(const RenderImage*, rcp<RenderBuffer> vertices_f32, rcp<RenderBuffer> uvCoords_f32, rcp<RenderBuffer> indices_u16, BlendMode, float opacity)
+{
+   // TODO: Implement this!
+}
+
 namespace rive
 {
    /**
