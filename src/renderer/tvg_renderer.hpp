@@ -231,17 +231,24 @@ namespace rive
    class TvgRenderer : public Renderer
    {
    protected:
-      Canvas* m_Canvas;
+      Canvas* m_Canvas = nullptr;
+      Scene* m_Scene = nullptr;
       Shape* m_ClipPath = nullptr;
       Shape* m_BgClipPath = nullptr;
       Mat2D m_Transform;
       stack<Mat2D> m_SavedTransforms;
    public:
       /**
-       * @brief Construct a new Renderer
+       * @brief Construct a new Renderer that draws direct to canvas
        * @param canvas The canvas to render to
        */
       TvgRenderer(Canvas* canvas) : m_Canvas(canvas) {}
+
+      /**
+       * @brief Construct a new Renderer that draws to a scene
+       * @param canvas The canvas to render to
+       */
+      TvgRenderer(Scene* scene) : m_Scene(scene) {}
 
       /**
        * @brief Save the current transform

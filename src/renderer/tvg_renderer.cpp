@@ -284,11 +284,13 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
       auto scene = tvg::Scene::gen();
       scene->push(unique_ptr<Paint>(tvgShape->duplicate()));
       scene->composite(unique_ptr<Shape>(static_cast<Shape*>(m_BgClipPath->duplicate())), tvg::CompositeMethod::ClipPath);
-      m_Canvas->push(move(scene));
+      if (m_Canvas) m_Canvas->push(move(scene));
+      else m_Scene->push(move(scene));
    }
    else
    {
-      m_Canvas->push(unique_ptr<Paint>(tvgShape->duplicate()));
+      if (m_Canvas) m_Canvas->push(unique_ptr<Paint>(tvgShape->duplicate()));
+      else m_Scene->push(unique_ptr<Paint>(tvgShape->duplicate()));
    }
 }
 
