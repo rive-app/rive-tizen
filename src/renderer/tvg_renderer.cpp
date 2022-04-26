@@ -182,7 +182,7 @@ void TvgRenderPaint::cap(StrokeCap value)
 
 void TvgRenderPaint::shader(rcp<RenderShader> shader)
 {
-   m_Paint.shader = (TvgRenderShader*)(shader.get());
+   m_Paint.shader = (TvgRenderShader*)(std::move(shader).release());
 }
 
 bool TvgRenderImage::decode(Span<const uint8_t> data)
@@ -195,8 +195,6 @@ bool TvgRenderImage::decode(Span<const uint8_t> data)
 
 rcp<RenderShader> TvgRenderImage::makeShader(RenderTileMode tx, RenderTileMode ty, const Mat2D* localMatrix) const
 {
-   // TODO: Not sure if this is the correct way to do it, because the shader
-   // will now own m_Image and may free it. Is this ok?
    TvgRenderShader* shader = new TvgRenderShader(m_Image.get());
 
    // TODO: Implement tx, ty and localMatrix
@@ -236,12 +234,12 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
    {
       if (tvgPaint->isPicture())
       {
-         // TODO: fille tvgShape with image
+         // TODO: fill tvgShape with image
          // The image is in tvgPaint->shader->picture()
       }
       else if (tvgPaint->isFill())
       {
-         tvgShape->fill(unique_ptr<tvg::Fill>(tvgPaint->shader->fill()->duplicate()));
+         tvgShape->fill(std::unique_ptr<Fill>(tvgPaint->shader->fill()->duplicate()));
       }
       else
       {
@@ -261,7 +259,7 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
       }
       else if (tvgPaint->isFill())
       {
-         tvgShape->stroke(unique_ptr<tvg::Fill>(tvgPaint->shader->fill()->duplicate()));
+         tvgShape->stroke(std::unique_ptr<Fill>(tvgPaint->shader->fill()->duplicate()));
       }
       else
       {
@@ -272,7 +270,7 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
    if (m_ClipPath)
    {
       m_ClipPath->fill(255, 255, 255, 255);
-      tvgShape->composite(unique_ptr<Shape>(static_cast<Shape*>(m_ClipPath->duplicate())), tvg::CompositeMethod::ClipPath);
+      tvgShape->composite(std::unique_ptr<Shape>(static_cast<Shape*>(m_ClipPath->duplicate())), tvg::CompositeMethod::ClipPath);
       m_ClipPath = nullptr;
    }
 
@@ -282,15 +280,15 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
    {
       m_BgClipPath->fill(255, 255, 255, 255);
       auto scene = tvg::Scene::gen();
-      scene->push(unique_ptr<Paint>(tvgShape->duplicate()));
-      scene->composite(unique_ptr<Shape>(static_cast<Shape*>(m_BgClipPath->duplicate())), tvg::CompositeMethod::ClipPath);
-      if (m_Canvas) m_Canvas->push(move(scene));
-      else m_Scene->push(move(scene));
+      scene->push(std::unique_ptr<Paint>(tvgShape->duplicate()));
+      scene->composite(std::unique_ptr<Shape>(static_cast<Shape*>(m_BgClipPath->duplicate())), tvg::CompositeMethod::ClipPath);
+      if (m_Canvas) m_Canvas->push(std::move(scene));
+      else m_Scene->push(std::move(scene));
    }
    else
    {
-      if (m_Canvas) m_Canvas->push(unique_ptr<Paint>(tvgShape->duplicate()));
-      else m_Scene->push(unique_ptr<Paint>(tvgShape->duplicate()));
+      if (m_Canvas) m_Canvas->push(std::unique_ptr<Paint>(tvgShape->duplicate()));
+      else m_Scene->push(std::unique_ptr<Paint>(tvgShape->duplicate()));
    }
 }
 
@@ -438,7 +436,7 @@ namespace rive
       }
       gradient->colorStops(colorStops, count);
 
-      return rcp<RenderShader>(new TvgRenderShader(gradient));
+      return rcp<RenderShader>(new TvgRenderShader(std::unique_ptr<Fill>(gradient)));
    }
 
    /**
@@ -471,7 +469,7 @@ namespace rive
       }
       gradient->colorStops(colorStops, count);
 
-      return rcp<RenderShader>(new TvgRenderShader(gradient));
+      return rcp<RenderShader>(new TvgRenderShader(std::unique_ptr<Fill>(gradient)));
    }
 
    /**
