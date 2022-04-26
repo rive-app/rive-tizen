@@ -31,7 +31,7 @@ namespace rive_tizen
 
 	private:
 		rive::File* m_File;
-		unique_ptr<tvg::SwCanvas> m_Canvas;
+		std::unique_ptr<tvg::SwCanvas> m_Canvas;
 		bool m_Is_Fileloaded;
 
 		int m_Width;

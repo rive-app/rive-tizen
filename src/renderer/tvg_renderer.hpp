@@ -7,7 +7,6 @@
 #include "rive/renderer.hpp"
 
 using namespace tvg;
-using namespace std;
 
 namespace rive
 {
@@ -18,39 +17,57 @@ namespace rive
     */
    class TvgRenderShader : public RenderShader {
    private:
-      std::unique_ptr<Fill> m_Fill;
-      std::unique_ptr<Picture> m_Picture;
+      std::unique_ptr<Fill> m_Fill = nullptr;
+      Picture* m_Picture = nullptr;
    public:
       /**
        * @brief Construct a new Render Shader with a gradient fill
        * @param fill The gradient fill
        */
-      TvgRenderShader(Fill* fill) : m_Fill(move(fill)){}
+      TvgRenderShader(std::unique_ptr<Fill> fill) : m_Fill(std::move(fill)){}
 
       /**
        * @brief Construct a new Tvg Render Shader with an image fill
        * @param picture The image fill
        */
-      TvgRenderShader(Picture* picture) : m_Picture(move(picture)){}
+      TvgRenderShader(Picture* picture) : m_Picture(picture){}
+
+      /**
+       * @brief Check if the shader holds a gradient fill
+       * 
+       * @return true If the shader holds a gradient fill
+       * @return false If the shader does not hold a gradient fill
+       */
+      bool hasFill(){ return (bool)m_Fill; }
 
       /**
        * @brief Get the gradient fill
-       * @return Fill* The gradient fill (or nullptr)
+       * The fill pointer is now owned by the caller
+       * @return unique_ptr<tvg::Fill> The gradient fill (or nullptr)
        */
-      Fill* fill() const { return m_Fill.get(); }
+      Fill* fill() { return m_Fill.get(); }
+
+      /**
+       * @brief Check if the shader holds a picture
+       * 
+       * @return true If the shader holds a picture
+       * @return false If the shader does not hold a picture
+       */
+      bool hasPicture(){ return m_Picture != nullptr; }
 
       /**
        * @brief Get the image fill
        * @return Picture* The image fill (or nullptr)
        */
-      Picture* picture() const { return m_Picture.get(); }
+      Picture* picture() { return m_Picture; }
    };
 
    /**
     * @brief A struct that describes a paint operation
     */
-   struct TvgPaint
+   class TvgPaint
    {
+   public:
       uint8_t color[4];
       float thickness = 1.0f;
       TvgRenderShader* shader = nullptr;
@@ -61,12 +78,12 @@ namespace rive
       /**
        * @brief Check if this paint describes a gradient fill
        */
-      bool isFill(){ return shader && shader->fill(); }
+      bool isFill(){ return shader && shader->hasFill(); }
 
       /**
        * @brief Check if this paint describes an image fill
        */
-      bool isPicture(){ return shader && shader->picture(); }
+      bool isPicture(){ return shader && shader->hasPicture(); }
    };
 
    /**
@@ -75,7 +92,7 @@ namespace rive
    class TvgRenderPath : public RenderPath
    {
    private:
-      unique_ptr<Shape> m_Path;
+      std::unique_ptr<Shape> m_Path;
    public:
       /**
        * @brief Construct a new Render Path object
@@ -194,12 +211,12 @@ namespace rive
     */
    class TvgRenderImage : public RenderImage {
    private:
-      unique_ptr<Picture> m_Image;
+      std::unique_ptr<Picture> m_Image = nullptr;
    public:
       /**
        * @brief Get the image as a Picture
        */
-      Picture* image() const { return m_Image.get(); };
+      std::unique_ptr<Picture> image() { return std::move(m_Image); };
 
       /**
        * @brief Decode an image
@@ -236,7 +253,7 @@ namespace rive
       Shape* m_ClipPath = nullptr;
       Shape* m_BgClipPath = nullptr;
       Mat2D m_Transform;
-      stack<Mat2D> m_SavedTransforms;
+      std::stack<Mat2D> m_SavedTransforms;
    public:
       /**
        * @brief Construct a new Renderer that draws direct to canvas
