@@ -195,10 +195,9 @@ bool TvgRenderImage::decode(Span<const uint8_t> data)
 
 rcp<RenderShader> TvgRenderImage::makeShader(RenderTileMode tx, RenderTileMode ty, const Mat2D* localMatrix) const
 {
-   TvgRenderShader* shader = new TvgRenderShader(m_Image.get());
+   TvgRenderShader* shader = new TvgRenderShader(m_Image.get(), localMatrix);
 
    // TODO: Implement tx, ty and localMatrix
-
    return rcp<RenderShader>(shader);
 }
 
@@ -292,6 +291,43 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
    }
 }
 
+void TvgRenderer::drawImage(const RenderImage* image, BlendMode blendMode, float opacity)
+{
+   auto paint = ((TvgRenderImage*)image)->image()->duplicate();
+   opacity = opacity < 0.0 ? 0.0 : opacity > 1.0 ? 1.0 : opacity;
+   paint->opacity(int(opacity*255.0));
+   //paint->blendMode(blendMode); TODO: Blend mode unsupported by ThorVG
+
+   if (m_ClipPath)
+   {
+      m_ClipPath->fill(255, 255, 255, 255);
+      paint->composite(std::unique_ptr<Shape>(static_cast<Shape*>(m_ClipPath->duplicate())), tvg::CompositeMethod::ClipPath);
+      m_ClipPath = nullptr;
+   }
+
+   paint->transform({m_Transform[0], m_Transform[2], m_Transform[4], m_Transform[1], m_Transform[3], m_Transform[5], 0, 0, 1});
+
+   if (m_BgClipPath)
+   {
+      m_BgClipPath->fill(255, 255, 255, 255);
+      auto scene = tvg::Scene::gen();
+      scene->push(std::unique_ptr<Paint>(paint));
+      scene->composite(std::unique_ptr<Shape>(static_cast<Shape*>(m_BgClipPath->duplicate())), tvg::CompositeMethod::ClipPath);
+      if (m_Canvas) m_Canvas->push(std::move(scene));
+      else m_Scene->push(std::move(scene));
+   }
+   else
+   {
+      if (m_Canvas) m_Canvas->push(std::unique_ptr<Paint>(paint));
+      else m_Scene->push(std::unique_ptr<Paint>(paint));
+   }
+}
+
+void TvgRenderer::drawImageMesh(const RenderImage*, rcp<RenderBuffer> vertices_f32, rcp<RenderBuffer> uvCoords_f32, rcp<RenderBuffer> indices_u16, BlendMode blendMode, float opacity)
+{
+   // TODO: Implement this!
+}
+
 void TvgRenderer::clipPath(RenderPath* path)
 {
    //Note: ClipPath transform matrix is calculated by transform matrix in addRenderPath function
@@ -305,16 +341,6 @@ void TvgRenderer::clipPath(RenderPath* path)
       m_ClipPath = static_cast<TvgRenderPath*>(path)->path();
       m_ClipPath->transform({m_Transform[0], m_Transform[2], m_Transform[4], m_Transform[1], m_Transform[3], m_Transform[5], 0, 0, 1});
    }
-}
-
-void TvgRenderer::drawImage(const RenderImage*, BlendMode, float opacity)\
-{
-   // TODO: Implement this!
-}
-
-void TvgRenderer::drawImageMesh(const RenderImage*, rcp<RenderBuffer> vertices_f32, rcp<RenderBuffer> uvCoords_f32, rcp<RenderBuffer> indices_u16, BlendMode, float opacity)
-{
-   // TODO: Implement this!
 }
 
 namespace rive

@@ -19,6 +19,7 @@ namespace rive
    private:
       std::unique_ptr<Fill> m_Fill = nullptr;
       Picture* m_Picture = nullptr;
+      Mat2D m_Transform;
    public:
       /**
        * @brief Construct a new Render Shader with a gradient fill
@@ -30,7 +31,16 @@ namespace rive
        * @brief Construct a new Tvg Render Shader with an image fill
        * @param picture The image fill
        */
-      TvgRenderShader(Picture* picture) : m_Picture(picture){}
+      TvgRenderShader(Picture* picture, const Mat2D* transform = nullptr) : m_Picture(picture){
+         if (transform) {
+            m_Transform[0] = (*transform)[0];
+            m_Transform[1] = (*transform)[1];
+            m_Transform[2] = (*transform)[2];
+            m_Transform[3] = (*transform)[3];
+            m_Transform[4] = (*transform)[4];
+            m_Transform[5] = (*transform)[5];
+         }
+      }
 
       /**
        * @brief Check if the shader holds a gradient fill
@@ -195,7 +205,7 @@ namespace rive
 
       /**
        * @brief Set the blend mode
-       * TODO: Implement this!
+       * TODO: Implement this! Blend mode currently unsupported by ThorVG?
        */
       void blendMode(BlendMode value) override {}
 
@@ -216,7 +226,7 @@ namespace rive
       /**
        * @brief Get the image as a Picture
        */
-      std::unique_ptr<Picture> image() { return std::move(m_Image); };
+      Picture* image() { return m_Image.get(); };
 
       /**
        * @brief Decode an image
@@ -305,21 +315,25 @@ namespace rive
        * 
        * TODO: Implement this!
        * 
-       * @param opacity 
+       * @param image The image to draw 
+       * @param blendMode The blending mode - currently unsupported by ThorVG? 
+       * @param opacity The opacity from 0.0 to 1.0
        */
-      void drawImage(const RenderImage*, BlendMode, float opacity) override;
+      void drawImage(const RenderImage* image, BlendMode blendMode, float opacity) override;
 
       /**
        * @brief
        * 
        * TODO: Implement this!
        * 
+       * @param image The image to draw 
        * @param vertices_f32 
        * @param uvCoords_f32 
        * @param indices_u16 
-       * @param opacity 
+       * @param blendMode The blending mode - currently unsupported by ThorVG? 
+       * @param opacity The opacity from 0.0 to 1.0
        */
-      void drawImageMesh(const RenderImage*, rcp<RenderBuffer> vertices_f32, rcp<RenderBuffer> uvCoords_f32, rcp<RenderBuffer> indices_u16, BlendMode, float opacity) override;
+      void drawImageMesh(const RenderImage* image, rcp<RenderBuffer> vertices_f32, rcp<RenderBuffer> uvCoords_f32, rcp<RenderBuffer> indices_u16, BlendMode blendMode, float opacity) override;
    };
 
 } // namespace
