@@ -205,7 +205,6 @@ namespace rive
 
       /**
        * @brief Set the blend mode
-       * TODO: Implement this! Blend mode currently unsupported by ThorVG?
        */
       void blendMode(BlendMode value) override {}
 
@@ -230,9 +229,6 @@ namespace rive
 
       /**
        * @brief Decode an image
-       * 
-       * TODO: Implement this!
-       * 
        * @return true Succeeded
        * @return false Failed
        */
@@ -240,9 +236,6 @@ namespace rive
 
       /**
        * @brief Create an image fill shader from this RenderImage
-       * 
-       * TODO: Implement this!
-       * 
        * @param tx The tiling mode in the X direction
        * @param ty The tiling mode in the Y direction
        * @param localMatrix The transform matrix
@@ -303,7 +296,7 @@ namespace rive
       void clipPath(RenderPath* path) override;
 
       /**
-       * @brief Draw
+       * @brief Draw a path to the tvg canvas
        * 
        * @param path The path to draw 
        * @param paint The paint to use while drawing
@@ -311,10 +304,7 @@ namespace rive
       void drawPath(RenderPath* path, RenderPaint* paint) override;
 
       /**
-       * @brief 
-       * 
-       * TODO: Implement this!
-       * 
+       * @brief Draw an image to the tvg canvas
        * @param image The image to draw 
        * @param blendMode The blending mode - currently unsupported by ThorVG? 
        * @param opacity The opacity from 0.0 to 1.0
@@ -322,10 +312,7 @@ namespace rive
       void drawImage(const RenderImage* image, BlendMode blendMode, float opacity) override;
 
       /**
-       * @brief
-       * 
-       * TODO: Implement this!
-       * 
+       * @brief Draw a mesh of images to the tvg canvas
        * @param image The image to draw 
        * @param vertices_f32 
        * @param uvCoords_f32 
