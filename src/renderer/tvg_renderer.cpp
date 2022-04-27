@@ -196,8 +196,9 @@ bool TvgRenderImage::decode(Span<const uint8_t> data)
 rcp<RenderShader> TvgRenderImage::makeShader(RenderTileMode tx, RenderTileMode ty, const Mat2D* localMatrix) const
 {
    TvgRenderShader* shader = new TvgRenderShader(m_Image.get(), localMatrix);
+   // TODO: Implement tx, ty - probably as properties of the shader. They would map to tvg::FillSpread ?
+   //       rive::RenderTileMode = [ clamp, repeat, mirror, decal ], tvg::FillSpread = [ Pad, Reflect, Repeat ]
 
-   // TODO: Implement tx, ty and localMatrix
    return rcp<RenderShader>(shader);
 }
 
@@ -385,7 +386,7 @@ namespace rive
     */
    RenderPath* makeRenderPath(Span<const rive::Vec2D> points, Span<const uint8_t> verbs, rive::FillRule fillRule)
    {
-      // TODO: Check that method is doing what it is supposed to do!
+      // TODO: ThorVG team to check that this method is doing what it is supposed to do!
 
       TvgRenderPath* renderPath = new TvgRenderPath();
       renderPath->fillRule(fillRule);
@@ -500,7 +501,7 @@ namespace rive
 
    /**
     * @brief Create a sweep gradient
-    * TODO: Implement this!
+    * TODO: Future work. Rive does not yet support Sweep gradient.
     */
    rcp<RenderShader> makeSweepGradient(float cx, float cy, const ColorInt colors[], const float stops[], int count, const Mat2D* localMatrix)
    {
