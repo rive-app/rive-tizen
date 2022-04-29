@@ -1,5 +1,11 @@
 # Rive-Tizen
 
+A library to render Rive files using ThorVG as the rendering engine.
+
+## Current status
+
+2022-04-29 - Updated to the Rive v7 runtime.
+
 ## Build
 ### Prerequiste
 Rive-Tizen requires [ThorVG](https://github.com/Samsung/thorvg) to render Rive graphical units.
@@ -13,7 +19,7 @@ git submodule update --init --recursive
 ```
 
 ### Build Rive-Tizen
-Basically, Rive-Tizen supports [meson](https://mesonbuild.com/) build system.
+Rive-Tizen uses the [meson](https://mesonbuild.com/) build system.
 
 Install [meson](http://mesonbuild.com/Getting-meson.html) and [ninja](https://ninja-build.org/) if not installed yet.
 
