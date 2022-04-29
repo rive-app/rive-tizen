@@ -182,15 +182,22 @@ void TvgRenderPaint::cap(StrokeCap value)
 
 void TvgRenderPaint::shader(rcp<RenderShader> shader)
 {
-   m_Paint.shader = (TvgRenderShader*)(std::move(shader).release());
+   TvgRenderShader* sh = (TvgRenderShader*)shader.release();
+   m_Paint.shader = std::unique_ptr<TvgRenderShader>(sh);
 }
 
 bool TvgRenderImage::decode(Span<const uint8_t> data)
 {
    m_Image = Picture::gen();
-   auto res = m_Image->load((const char *)data.data(), data.size(), "");
+   if(m_Image->load((const char *)data.data(), data.size(), "") == tvg::Result::Success)
+   {
+      if (m_Image->size(&width, &height) == tvg::Result::Success) {
+         return true;
+      }
+      width = height = 0.0;
+   }
 
-   return res == tvg::Result::Success;
+   return false;
 }
 
 rcp<RenderShader> TvgRenderImage::makeShader(RenderTileMode tx, RenderTileMode ty, const Mat2D* localMatrix) const
@@ -204,17 +211,22 @@ rcp<RenderShader> TvgRenderImage::makeShader(RenderTileMode tx, RenderTileMode t
 
 void TvgRenderer::save()
 {
-    m_SavedTransforms.push(m_Transform);
+   TvgRendererState state;
+   state.clipPath = m_ClipPath;
+   state.transform = m_Transform;
+   m_SavedTransforms.push(state);
 }
 
 void TvgRenderer::restore()
 {
-    // Check shouldn't be needed, but safest to check
-    if (m_SavedTransforms.size() > 0)
-    {
-        m_Transform = m_SavedTransforms.top();
-        m_SavedTransforms.pop();
-    }
+   // Check shouldn't be needed, but safest to check
+   if (m_SavedTransforms.size() > 0)
+   {
+      TvgRendererState state = m_SavedTransforms.top();
+      m_SavedTransforms.pop();
+      m_ClipPath = state.clipPath;
+      m_Transform = state.transform;
+   }
 }
 
 void TvgRenderer::transform(const Mat2D& transform)
@@ -294,33 +306,44 @@ void TvgRenderer::drawPath(RenderPath* path, RenderPaint* paint)
 
 void TvgRenderer::drawImage(const RenderImage* image, BlendMode blendMode, float opacity)
 {
-   auto paint = ((TvgRenderImage*)image)->image()->duplicate();
+   TvgRenderImage* renderImage = (TvgRenderImage*)image;
+   float offsetx = -renderImage->width/2;
+   float offsety = -renderImage->height/2;
+
+   // Duplicate the image because the RenderImage owns it and re-uses it
+   auto paint = renderImage->image()->duplicate();
    opacity = opacity < 0.0 ? 0.0 : opacity > 1.0 ? 1.0 : opacity;
    paint->opacity(int(opacity*255.0));
    //paint->blendMode(blendMode); TODO: Blend mode unsupported by ThorVG
 
+   // ThorVG image handle is top-left, Rive image handle is center. Place image
+   // in a scene and translate it to account for this.
+   auto paintWrapper = tvg::Scene::gen();
+   paint->translate(offsetx, offsety);
+   paintWrapper->push(std::unique_ptr<Paint>(paint));
+
    if (m_ClipPath)
    {
       m_ClipPath->fill(255, 255, 255, 255);
-      paint->composite(std::unique_ptr<Shape>(static_cast<Shape*>(m_ClipPath->duplicate())), tvg::CompositeMethod::ClipPath);
+      paintWrapper->composite(std::unique_ptr<Shape>(static_cast<Shape*>(m_ClipPath->duplicate())), tvg::CompositeMethod::ClipPath);
       m_ClipPath = nullptr;
    }
 
-   paint->transform({m_Transform[0], m_Transform[2], m_Transform[4], m_Transform[1], m_Transform[3], m_Transform[5], 0, 0, 1});
-
+   paintWrapper->transform({m_Transform[0], m_Transform[2], m_Transform[4], m_Transform[1], m_Transform[3], m_Transform[5], 0, 0, 1});
+   
    if (m_BgClipPath)
    {
       m_BgClipPath->fill(255, 255, 255, 255);
       auto scene = tvg::Scene::gen();
-      scene->push(std::unique_ptr<Paint>(paint));
+      scene->push(std::move(paintWrapper));
       scene->composite(std::unique_ptr<Shape>(static_cast<Shape*>(m_BgClipPath->duplicate())), tvg::CompositeMethod::ClipPath);
       if (m_Canvas) m_Canvas->push(std::move(scene));
       else m_Scene->push(std::move(scene));
    }
    else
    {
-      if (m_Canvas) m_Canvas->push(std::unique_ptr<Paint>(paint));
-      else m_Scene->push(std::unique_ptr<Paint>(paint));
+      if (m_Canvas) m_Canvas->push(std::move(paintWrapper));
+      else m_Scene->push(std::move(paintWrapper));
    }
 }
 
