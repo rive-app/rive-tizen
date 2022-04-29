@@ -80,7 +80,7 @@ namespace rive
    public:
       uint8_t color[4];
       float thickness = 1.0f;
-      TvgRenderShader* shader = nullptr;
+      std::unique_ptr<TvgRenderShader> shader = nullptr;
       tvg::StrokeJoin join = tvg::StrokeJoin::Bevel;
       tvg::StrokeCap  cap = tvg::StrokeCap::Butt;
       RenderPaintStyle style = RenderPaintStyle::fill;
@@ -223,6 +223,18 @@ namespace rive
       std::unique_ptr<Picture> m_Image = nullptr;
    public:
       /**
+       * @brief Image width
+       * Set during decode. Should be read-only
+       */
+      float width = 0.0;
+
+      /**
+       * @brief Image height
+       * Set during decode. Should be read-only
+       */
+      float height = 0.0;
+
+      /**
        * @brief Get the image as a Picture
        */
       Picture* image() { return m_Image.get(); };
@@ -245,6 +257,15 @@ namespace rive
    };
 
    /**
+    * @brief State for save and restore calls
+    */
+   struct TvgRendererState
+   {
+      Shape* clipPath;
+      Mat2D transform;
+   };
+
+   /**
     * @brief Renders rive files
     * 
     */
@@ -254,9 +275,9 @@ namespace rive
       Canvas* m_Canvas = nullptr;
       Scene* m_Scene = nullptr;
       Shape* m_ClipPath = nullptr;
-      Shape* m_BgClipPath = nullptr;
       Mat2D m_Transform;
-      std::stack<Mat2D> m_SavedTransforms;
+      Shape* m_BgClipPath = nullptr;
+      std::stack<TvgRendererState> m_SavedTransforms;
    public:
       /**
        * @brief Construct a new Renderer that draws direct to canvas
