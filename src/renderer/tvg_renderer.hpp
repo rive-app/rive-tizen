@@ -276,7 +276,6 @@ namespace rive
       Scene* m_Scene = nullptr;
       Shape* m_ClipPath = nullptr;
       Mat2D m_Transform;
-      Shape* m_BgClipPath = nullptr;
       std::stack<TvgRendererState> m_SavedTransforms;
    public:
       /**
