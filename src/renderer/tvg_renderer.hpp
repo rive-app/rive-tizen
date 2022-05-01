@@ -274,7 +274,7 @@ namespace rive
    protected:
       Canvas* m_Canvas = nullptr;
       Scene* m_Scene = nullptr;
-      Shape* m_ClipPath = nullptr;
+      std::unique_ptr<Shape> m_ClipPath = nullptr;
       Mat2D m_Transform;
       std::stack<TvgRendererState> m_SavedTransforms;
    public:
