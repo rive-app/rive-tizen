@@ -224,8 +224,7 @@ void TvgRenderer::restore()
    {
       TvgRendererState state = m_SavedTransforms.top();
       m_SavedTransforms.pop();
-      delete m_ClipPath;
-      m_ClipPath = state.clipPath;
+      m_ClipPath = std::unique_ptr<Shape>(state.clipPath);
       m_Transform = state.transform;
    }
 }
@@ -329,14 +328,15 @@ void TvgRenderer::drawImageMesh(const RenderImage*, rcp<RenderBuffer> vertices_f
 
 void TvgRenderer::clipPath(RenderPath* path)
 {
+   // Duplicate path from the RenderPath. Note that we now own the pointer
    Shape* clipPath = static_cast<Shape*>(static_cast<TvgRenderPath*>(path)->path()->duplicate());
    clipPath->transform({m_Transform[0], m_Transform[2], m_Transform[4], m_Transform[1], m_Transform[3], m_Transform[5], 0, 0, 1});
    if (m_ClipPath)
    {
       // If a clip path already exists, we need the intersection of the existing one and the new one
-      clipPath->composite(std::unique_ptr<Shape>(m_ClipPath), tvg::CompositeMethod::ClipPath);
+      clipPath->composite(std::move(m_ClipPath), tvg::CompositeMethod::ClipPath);
    }
-   m_ClipPath = clipPath;
+   m_ClipPath = std::unique_ptr<Shape>(clipPath);
 }
 
 namespace rive
