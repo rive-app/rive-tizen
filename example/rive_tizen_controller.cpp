@@ -48,7 +48,7 @@ static void initAnimation(int index)
 	animationInstance = nullptr;
 
 	auto animation = artboard->animation(index);
-	if (animation) animationInstance = new rive::LinearAnimationInstance(animation);
+	if (animation) animationInstance = new rive::LinearAnimationInstance(animation, artboard);
 }
 
 static void loadRiveFile(const char* filename)
@@ -66,7 +66,7 @@ static void loadRiveFile(const char* filename)
 	animationInstance = nullptr;
 
 	auto animation = artboard->firstAnimation();
-	if (animation) animationInstance = new rive::LinearAnimationInstance(animation);
+	if (animation) animationInstance = new rive::LinearAnimationInstance(animation, artboard);
 }
 
 static void fileClickedCb(void* data, Evas_Object* obj, void* event_info)
@@ -111,7 +111,7 @@ Eina_Bool animationLoop(void* data)
 	if (!artboard || !animationInstance) return ECORE_CALLBACK_RENEW;
 
 	animationInstance->advance(elapsed);
-	animationInstance->apply(artboard);
+	animationInstance->apply();
 
 	controller.render(elapsed);
 

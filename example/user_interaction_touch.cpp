@@ -2,14 +2,16 @@
 #include <Elementary.h>
 #include <rive_tizen.hpp>
 
-#include "node.hpp"
-#include "animation/linear_animation_instance.hpp"
-#include "artboard.hpp"
-#include "file.hpp"
+#include "rive/node.hpp"
+#include "rive/animation/linear_animation_instance.hpp"
+#include "rive/artboard.hpp"
+#include "rive/file.hpp"
 #include "tvg_renderer.hpp"
 
 #define WIDTH 1000
 #define HEIGHT 1000
+
+using namespace std;
 
 static unique_ptr<tvg::SwCanvas> canvas = nullptr;
 static rive::Artboard* artboard = nullptr;
@@ -34,7 +36,7 @@ static void initAnimation(int index)
     animationInstance = nullptr;
 
     auto animation = artboard->animation(index);
-    if (animation) animationInstance = new rive::LinearAnimationInstance(animation);
+    if (animation) animationInstance = new rive::LinearAnimationInstance(animation, artboard);
 }
 
 static void loadRiveFile(const char* filename)
@@ -58,9 +60,8 @@ static void loadRiveFile(const char* filename)
     }
 
     auto reader = rive::BinaryReader(bytes, length);
-    rive::File* file = nullptr;
-    auto result = rive::File::import(reader, &file);
-    if (result != rive::ImportResult::success)
+    auto file = rive::File::import(reader);
+    if (!file)
     {
        delete[] bytes;
        fprintf(stderr, "failed to import %s\n", filename);
@@ -72,7 +73,7 @@ static void loadRiveFile(const char* filename)
     artboard->advance(0.0f);
 
     auto animation = artboard->firstAnimation();
-    if (animation) animationInstance = new rive::LinearAnimationInstance(animation);
+    if (animation) animationInstance = new rive::LinearAnimationInstance(animation, artboard);
 
     delete[] bytes;
     fclose(fp);
@@ -91,7 +92,7 @@ Eina_Bool animationLoop(void *data)
     artboard->updateComponents();
 
     animationInstance->advance(elapsed);
-    animationInstance->apply(artboard);
+    animationInstance->apply();
 
     artboard->advance(elapsed);
 

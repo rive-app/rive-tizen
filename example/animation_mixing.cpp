@@ -4,9 +4,9 @@
 #include <Elementary.h>
 #include <rive_tizen.hpp>
 
-#include "animation/linear_animation_instance.hpp"
-#include "artboard.hpp"
-#include "file.hpp"
+#include "rive/animation/linear_animation_instance.hpp"
+#include "rive/artboard.hpp"
+#include "rive/file.hpp"
 #include "tvg_renderer.hpp"
 
 using namespace std;
@@ -58,9 +58,8 @@ static void loadRiveFile(const char* filename)
     }
 
     auto reader = rive::BinaryReader(bytes, length);
-    rive::File* file = nullptr;
-    auto result = rive::File::import(reader, &file);
-    if (result != rive::ImportResult::success)
+    auto file = rive::File::import(reader);
+    if (!file)
     {
        delete[] bytes;
        fprintf(stderr, "failed to import %s\n", filename);
@@ -71,19 +70,16 @@ static void loadRiveFile(const char* filename)
     artboard->advance(0.0f);
 
     auto animation = artboard->animation(0);
-    if (animation) animationInstance[0] = new rive::LinearAnimationInstance(animation);
+    if (animation) animationInstance[0] = new rive::LinearAnimationInstance(animation, artboard);
 
     animation = artboard->animation(1);
-    if (animation) animationInstance[1] = new rive::LinearAnimationInstance(animation);
+    if (animation) animationInstance[1] = new rive::LinearAnimationInstance(animation, artboard);
 
     animation = artboard->animation(2);
-    if (animation) animationInstance[2] = new rive::LinearAnimationInstance(animation);
+    if (animation) animationInstance[2] = new rive::LinearAnimationInstance(animation, artboard);
 
     animation = artboard->animation(3);
-    if (animation) animationInstance[3] = new rive::LinearAnimationInstance(animation);
-
-    delete currentFile;
-    currentFile = file;
+    if (animation) animationInstance[3] = new rive::LinearAnimationInstance(animation, artboard);
 
     delete[] bytes;
 }
@@ -110,7 +106,7 @@ Eina_Bool animationLoop(void *data)
       if (enableAnimation[i])
       {
          animationInstance[i]->advance(elapsed);
-         animationInstance[i]->apply(artboard);
+         animationInstance[i]->apply();
       }
     }
 

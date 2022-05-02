@@ -4,9 +4,9 @@
 #include <Elementary.h>
 #include <rive_tizen.hpp>
 
-#include "animation/linear_animation_instance.hpp"
-#include "artboard.hpp"
-#include "file.hpp"
+#include "rive/animation/linear_animation_instance.hpp"
+#include "rive/artboard.hpp"
+#include "rive/file.hpp"
 #include "tvg_renderer.hpp"
 
 using namespace std;
@@ -16,7 +16,6 @@ using namespace std;
 #define LIST_HEIGHT 200
 
 static unique_ptr<tvg::SwCanvas> canvas = nullptr;
-static rive::File* currentFile = nullptr;
 static rive::Artboard* artboard = nullptr;
 static rive::LinearAnimationInstance* animationInstance = nullptr;
 static Ecore_Animator *animator = nullptr;
@@ -48,7 +47,7 @@ static void initAnimation(int index)
     animationInstance = nullptr;
 
     auto animation = artboard->animation(index);
-    if (animation) animationInstance = new rive::LinearAnimationInstance(animation);
+    if (animation) animationInstance = new rive::LinearAnimationInstance(animation, artboard);
 }
 
 static void loadRiveFile(const char* filename)
@@ -72,9 +71,8 @@ static void loadRiveFile(const char* filename)
     }
 
     auto reader = rive::BinaryReader(bytes, length);
-    rive::File* file = nullptr;
-    auto result = rive::File::import(reader, &file);
-    if (result != rive::ImportResult::success)
+    auto file = rive::File::import(reader);
+    if (!file)
     {
        delete[] bytes;
        fprintf(stderr, "failed to import %s\n", filename);
@@ -88,10 +86,7 @@ static void loadRiveFile(const char* filename)
     animationInstance = nullptr;
 
     auto animation = artboard->firstAnimation();
-    if (animation) animationInstance = new rive::LinearAnimationInstance(animation);
-
-    delete currentFile;
-    currentFile = file;
+    if (animation) animationInstance = new rive::LinearAnimationInstance(animation, artboard);
 
     delete[] bytes;
 }
@@ -139,7 +134,7 @@ Eina_Bool animationLoop(void *data)
     if (!artboard || !animationInstance) return ECORE_CALLBACK_RENEW;
 
     animationInstance->advance(elapsed);
-    animationInstance->apply(artboard);
+    animationInstance->apply();
 
     artboard->advance(elapsed);
 
