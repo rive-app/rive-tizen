@@ -1,3 +1,4 @@
+#include <memory.h>
 #include "tvg_renderer.hpp"
 #include "rive/math/vec2d.hpp"
 #include "rive/shapes/paint/color.hpp"
